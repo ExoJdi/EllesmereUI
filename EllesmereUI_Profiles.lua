@@ -1411,6 +1411,7 @@ local REFRESH_ADDON_STEPS = {
         if EllesmereUI._applyTalentAlert then EllesmereUI._applyTalentAlert() end
         if EllesmereUI._applyAnnounceGroupDeaths then EllesmereUI._applyAnnounceGroupDeaths() end
         if EllesmereUI._applyGroupDeathAlert then EllesmereUI._applyGroupDeathAlert() end
+        if EllesmereUI._applyGeneralNotification then EllesmereUI._applyGeneralNotification() end
         if EllesmereUI._syncDurWarnEvents then EllesmereUI._syncDurWarnEvents() end
     end,
     -- QoL Battle Res and Bloodlust (enable state, visibility, position;

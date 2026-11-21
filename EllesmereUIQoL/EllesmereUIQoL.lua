@@ -4386,6 +4386,11 @@ do
         else
             alertOverlay:SetPoint("CENTER", UIParent, "CENTER", 0, 180)
         end
+        local gn = EllesmereUI.GeneralNotification
+        if gn then
+            gn.Sync(alertOverlay, alertOverlay._text, EllesmereUI.QoLExtrasGet("announceGroupDeaths") and EllesmereUI.QoLExtrasGet("groupDeathGeneralNotification"), 4, ApplyOverlaySettings)
+            gn.Layout()
+        end
     end
 
     local function CreateAlertOverlay()
@@ -4401,7 +4406,6 @@ do
         local fs = alertOverlay:CreateFontString(nil, "OVERLAY")
         fs:SetPoint("CENTER")
         alertOverlay._text = fs
-        ApplyOverlaySettings()
 
         -- Quick fade-in, brief hold, fade-out; hide when finished.
         local ag = alertOverlay:CreateAnimationGroup()
@@ -4416,6 +4420,7 @@ do
 
         alertOverlay:SetScript("OnHide", function() ag:Stop() end)
         alertOverlay:Hide()
+        ApplyOverlaySettings()
     end
 
     local function ShowAlert(name, classToken)
@@ -4430,6 +4435,7 @@ do
         end
         local skull = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t"
         alertOverlay._text:SetText(skull .. " " .. colored .. " |cffff2020DIED!|r")
+        if EllesmereUI.GeneralNotification then EllesmereUI.GeneralNotification.Layout() end
 
         alertOverlay._ag:Stop()
         alertOverlay:SetAlpha(1)
@@ -4584,6 +4590,7 @@ do
                 noResize = true,
                 isHidden = function()
                     return not EllesmereUI.QoLExtrasGet("announceGroupDeaths")
+                        or (EllesmereUI.QoLExtrasGet("generalNotificationEnabled") and EllesmereUI.QoLExtrasGet("groupDeathGeneralNotification"))
                 end,
                 getFrame = function()
                     CreateAlertOverlay()

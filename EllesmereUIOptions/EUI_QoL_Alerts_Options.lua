@@ -18,6 +18,9 @@ local function AlertCogRows(prefix, applyFrame, preview)
     local function db(k) return EllesmereUI.QoLExtrasGet(prefix .. k) end
     local function put(k, v) EllesmereUI.QoLExtrasSet(prefix .. k, v) end
     return {
+        { type="toggle", label="Attach to General Notification",
+          get=function() return db("GeneralNotification") == true end,
+          set=function(v) put("GeneralNotification", v); EllesmereUI.GeneralNotification.Apply() end },
         { type="input", label="Text", inputWidth=130,
           get=function() return db("Text") or D.text end,
           set=function(v) put("Text", v); if EllesmereUI[preview] then EllesmereUI[preview]() end end },
@@ -48,6 +51,31 @@ end
 _G._EUI_BuildAlertsSection = function(parent, yOffset, W, PP)
     local y = yOffset
     local _, h, hdr
+
+    hdr, h = W:SectionHeader(parent, "GENERAL NOTIFICATION", y); y = y - h
+    local function gnOff() return not EllesmereUI.QoLExtrasGet("generalNotificationEnabled") end
+    local function putGN(k, v)
+        EllesmereUI.QoLExtrasSet("generalNotification" .. k, v)
+        EllesmereUI.GeneralNotification.Apply()
+    end
+    EllesmereUI.BuildSectionUnlockJump(hdr, { key = "EUI_GeneralNotification", disabled = gnOff, disabledTooltip = "Enable General Notification" })
+    _, h = W:DualRow(parent, y,
+        { type="toggle", text="General Notification",
+          tooltip="One shared anchor for EUI alerts. Choose Attach to General Notification in each alert's settings.",
+          getValue=function() return not gnOff() end,
+          setValue=function(v) putGN("Enabled", v); EllesmereUI:RefreshPage() end },
+        { type="slider", text="Maximum Width", min=160, max=1200, step=10, disabled=gnOff,
+          getValue=function() return EllesmereUI.QoLExtrasGet("generalNotificationWidth") or 400 end,
+          setValue=function(v) putGN("Width", v) end }
+    ); y = y - h
+    _, h = W:DualRow(parent, y,
+        { type="dropdown", text="Grow", values={ LEFT="Left", CENTER="Center", RIGHT="Right" }, order={ "LEFT", "CENTER", "RIGHT" }, disabled=gnOff,
+          getValue=function() return EllesmereUI.QoLExtrasGet("generalNotificationGrow") or "CENTER" end,
+          setValue=function(v) putGN("Grow", v) end },
+        { type="toggle", text="Text Wrapping", disabled=gnOff,
+          getValue=function() return EllesmereUI.QoLExtrasGet("generalNotificationWrap") == true end,
+          setValue=function(v) putGN("Wrap", v) end }
+    ); y = y - h
 
     hdr, h = W:SectionHeader(parent, "ALERTS", y); y = y - h
     -- One anchor carries the Combat, Potion Ready and Unspent Talents alerts,
@@ -126,6 +154,9 @@ _G._EUI_BuildAlertsSection = function(parent, yOffset, W, PP)
             title = "Combat Alert Settings",
             minWidth = 300,
             rows = {
+                { type="toggle", label="Attach to General Notification",
+                  get=function() return EllesmereUI.QoLExtrasGet("combatAlertGeneralNotification") == true end,
+                  set=function(v) EllesmereUI.QoLExtrasSet("combatAlertGeneralNotification", v); EllesmereUI.GeneralNotification.Apply() end },
                 { type="dropdown", label="Show On",
                   values=caModeValues, order=caModeOrder,
                   get=function() return EllesmereUI.QoLExtrasGet("combatAlertMode") or "both" end,
@@ -231,6 +262,9 @@ _G._EUI_BuildAlertsSection = function(parent, yOffset, W, PP)
         EllesmereUI.BuildInlineCog(row2._rightRegion, {
             title = "Group Death Alert Settings",
             rows = {
+                { type="toggle", label="Attach to General Notification",
+                  get=function() return EllesmereUI.QoLExtrasGet("groupDeathGeneralNotification") == true end,
+                  set=function(v) EllesmereUI.QoLExtrasSet("groupDeathGeneralNotification", v); EllesmereUI.GeneralNotification.Apply() end },
                 { type="slider", label="Text Size",
                   min=14, max=64, step=1,
                   get=function()
