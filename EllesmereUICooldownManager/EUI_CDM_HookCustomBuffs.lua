@@ -137,12 +137,14 @@ function _AC.DurationFormatter()
     -- Thresholds sit ON each unit boundary: a floored value never crosses one,
     -- so none of the "just above the boundary" offsets the up-rounding
     -- formatters need apply here.
-    local ok = pcall(f.SetBreakpoints, f, {
+    local points = {
         { threshold = 0,     format = "%d",  step = 1, rounding = Down },
         { threshold = 60,    format = "%dm", step = 1, rounding = Down, components = { { div = 60 } } },
         { threshold = 3600,  format = "%dh", step = 1, rounding = Down, components = { { div = 3600 } } },
         { threshold = 86400, format = "%dd", step = 1, rounding = Down, components = { { div = 86400 } } },
-    })
+    }
+    EllesmereUI.ApplyDurationFormatRules(points)
+    local ok = pcall(f.SetBreakpoints, f, points)
     if not ok then return nil end
     _AC.durFmt = f
     return f

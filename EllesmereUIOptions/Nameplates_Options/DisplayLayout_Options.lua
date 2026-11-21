@@ -1185,7 +1185,7 @@ local function BuildDisplayLayout(parent, y, ctx)
             -- The slider column starts past the widest of a fixed set of labels,
             -- so every cog that opens this popup lines its sliders up alike.
             local tmpFS = pf:CreateFontString(nil, "OVERLAY")
-            tmpFS:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", 12, GetNPOptOutline())
+            tmpFS:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", 12, GetNPOptOutline())
             local labelTexts = {"X Offset", "Y Offset", "Size", "Width %", "Spacing", "Opacity", "Text Size"}
             local maxLblW = 0
             for _, txt in ipairs(labelTexts) do

@@ -1141,9 +1141,17 @@ end
 -------------------------------------------------------------------------------
 --  Utilities
 -------------------------------------------------------------------------------
+function EllesmereUI.GetOptionsFontPath(defaultPath)
+    local f = EllesmereUIDB and EllesmereUIDB.fonts
+    if f and f.optionsFont and EllesmereUI.ResolveFontName then
+        return EllesmereUI.ResolveFontName(f.optionsFont)
+    end
+    return defaultPath or LOCALE_FONT_FALLBACK or EXPRESSWAY
+end
+
 local function MakeFont(parent, size, flags, r, g, b, a)
     local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(LOCALE_FONT_FALLBACK or EXPRESSWAY, size, flags or "")
+    fs:SetFont(EllesmereUI.GetOptionsFontPath(), size, flags or "")
     if r then fs:SetTextColor(r, g, b, a or 1) end
     return fs
 end
@@ -1287,17 +1295,70 @@ do
     end
 end
 
+function EllesmereUI.GetTimeFormatDB()
+    local f = EllesmereUI.GetFontsDB()
+    if not f.timeFormat then f.timeFormat = {} end
+    return f.timeFormat
+end
+
+function EllesmereUI.ColorDurationUnits(text)
+    if issecretvalue and issecretvalue(text) then return text end
+    local f = EllesmereUI.GetTimeFormatDB()
+    if f.unitColor ~= "accent" and f.unitColor ~= "custom" then return text end
+    return (text:gsub("(%d)([mhd])", function(digit, unit)
+        local r, g, b = 1, 1, 1
+        if f.unitColor == "accent" then
+            r, g, b = EllesmereUI.ResolveActiveAccent()
+        else
+            local c = f[unit]
+            if c then r, g, b = c.r, c.g, c.b end
+        end
+        local function Byte(v) return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
+        return digit .. string.format("|cff%02x%02x%02x%s|r", Byte(r), Byte(g), Byte(b), unit)
+    end))
+end
+
+function EllesmereUI.FormatDurationClock(sec)
+    if issecretvalue and issecretvalue(sec) then return nil end
+    if type(sec) ~= "number" then return nil end
+    local f = EllesmereUI.GetTimeFormatDB()
+    if sec >= 86400 then return nil end
+    sec = math.floor(math.max(0, sec))
+    if sec >= 3600 then
+        if f.hoursClock then return string.format("%d:%02d", math.floor(sec / 3600), math.floor(sec / 60) % 60) end
+    elseif sec >= 60 and f.minutesClock then
+        return string.format("%d:%02d", math.floor(sec / 60), sec % 60)
+    end
+end
+
+function EllesmereUI.ApplyDurationFormatRules(points)
+    local f = EllesmereUI.GetTimeFormatDB()
+    for _, point in ipairs(points) do
+        if point.format == "%dm" and f.minutesClock then
+            point.format, point.step = "%d:%02d", 1
+            point.components = { { div = 60 }, { mod = 60 } }
+        elseif point.format == "%dh" and f.hoursClock then
+            point.format, point.step = "%d:%02d", 60
+            point.components = { { div = 3600 }, { div = 60, mod = 60 } }
+        end
+    end
+end
+
 -- A duration in whole minutes: 3d 4h, 1h 24m, 22m (a negative one reads 0m).
 function EllesmereUI.FormatDuration(sec)
+    if issecretvalue and issecretvalue(sec) then return "" end
+    if type(sec) ~= "number" then return "" end
+    local clock = EllesmereUI.FormatDurationClock(sec)
+    if clock then return clock end
     local m = math.floor((sec > 0 and sec or 0) / 60)
     local h = math.floor(m / 60)
     if h >= 24 then
         local d = math.floor(h / 24)
-        return string.format(EllesmereUI.L("%dd %dh"), d, h - d * 24)
+        return EllesmereUI.ColorDurationUnits(string.format(EllesmereUI.L("%dd %dh"), d, h - d * 24))
     elseif h > 0 then
-        return string.format(EllesmereUI.L("%dh %dm"), h, m - h * 60)
+        return EllesmereUI.ColorDurationUnits(string.format(EllesmereUI.L("%dh %dm"), h, m - h * 60))
     end
-    return string.format(EllesmereUI.L("%dm"), m)
+    return EllesmereUI.ColorDurationUnits(string.format(EllesmereUI.L("%dm"), m))
 end
 
 -- Realm a character roster groups by. Forever is realmless: the ruleset name.
@@ -3991,7 +4052,7 @@ function EllesmereUI.BuildStatusBadge(parent, text, name, opts)
     PP.CreateBorder(f, accent.r, accent.g, accent.b, 0.9, 1, "OVERLAY", 7)
 
     local label = f:CreateFontString(nil, "OVERLAY")
-    label:SetFont(EllesmereUI.EXPRESSWAY, 11,
+    label:SetFont(EllesmereUI.GetOptionsFontPath(), 11,
         (EllesmereUI.SlugFlag("OUTLINE, SLUG")) or "OUTLINE")
     label:SetText(text)
     label:SetTextColor(accent.r, accent.g, accent.b, 1)

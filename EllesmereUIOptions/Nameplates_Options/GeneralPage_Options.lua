@@ -378,7 +378,7 @@ local function BuildGeneralPage(pageName, parent, yOffset)
         local leftFrame = exCastRow._leftRegion
         if leftFrame then
             local suffixFS = leftFrame:CreateFontString(nil, "OVERLAY")
-            suffixFS:SetFont(EllesmereUI.EXPRESSWAY, 11, GetNPOptOutline())
+            suffixFS:SetFont(EllesmereUI.GetOptionsFontPath(), 11, GetNPOptOutline())
             suffixFS:SetTextColor(1, 1, 1, 0.35)
             local sliderLabel = SliderLabel(leftFrame, "Scale Nameplate On Cast")
             if sliderLabel then

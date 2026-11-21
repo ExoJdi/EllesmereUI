@@ -90,6 +90,7 @@ local function GetDecimalFormatter(thr)
         components = { { div = 3600 } } }
     points[#points + 1] = { threshold = 86399.0001, format = "%dd", rounding = Up, step = 1,
         components = { { div = 86400 } } }
+    EllesmereUI.ApplyDurationFormatRules(points)
     local ok = pcall(f.SetBreakpoints, f, points)
     if not ok then
         formatterByThr[thr] = false

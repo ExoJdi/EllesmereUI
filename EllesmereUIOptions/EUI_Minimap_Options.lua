@@ -614,7 +614,7 @@ initFrame:SetScript("OnEvent", function(self)
         if not EllesmereUI._prebuilding then
             local rgn = fmRow._leftRegion
             local suffix = rgn:CreateFontString(nil, "OVERLAY")
-            suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+            suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
             suffix:SetTextColor(1, 1, 1, 0.35)
             local rzLabel
             -- An idle pooled region keeps its last build's text: skip it.
@@ -1017,7 +1017,7 @@ initFrame:SetScript("OnEvent", function(self)
                 EllesmereUI.BlizzStyle.BlockInline("minimap", cogBtn)
 
                 local resetFS = rgn:CreateFontString(nil, "OVERLAY")
-                resetFS:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", 12, "")
+                resetFS:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", 12, "")
                 resetFS:SetTextColor(1, 1, 1, 0.8)
                 resetFS:SetText(EllesmereUI.L("Reset"))
                 resetFS:SetPoint("RIGHT", cogBtn, "LEFT", -8, 0)

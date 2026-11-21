@@ -524,7 +524,7 @@ local function BuildTargetFocusHoverPage(pageName, parent, yOffset)
         local leftFrame = tfScaleRow._leftRegion
         if leftFrame then
             local suffixFS = leftFrame:CreateFontString(nil, "OVERLAY")
-            suffixFS:SetFont(EllesmereUI.EXPRESSWAY, 11, GetNPOptOutline())
+            suffixFS:SetFont(EllesmereUI.GetOptionsFontPath(), 11, GetNPOptOutline())
             suffixFS:SetTextColor(1, 1, 1, 0.35)
             local sliderLabel = SliderLabel(leftFrame, "Scale Target Nameplate")
             if sliderLabel then
@@ -606,7 +606,7 @@ local function BuildTargetFocusHoverPage(pageName, parent, yOffset)
         local leftFrame = tfRangeRow._leftRegion
         if leftFrame then
             local suffixFS = leftFrame:CreateFontString(nil, "OVERLAY")
-            suffixFS:SetFont(EllesmereUI.EXPRESSWAY, 11, GetNPOptOutline())
+            suffixFS:SetFont(EllesmereUI.GetOptionsFontPath(), 11, GetNPOptOutline())
             suffixFS:SetTextColor(1, 1, 1, 0.35)
             local rowLabel = SliderLabel(leftFrame, "Distance to Target Text")
             if rowLabel then
@@ -717,7 +717,7 @@ local function BuildTargetFocusHoverPage(pageName, parent, yOffset)
             local leftFrame = hashLocRow._leftRegion
             if leftFrame then
                 local suffixFS = leftFrame:CreateFontString(nil, "OVERLAY")
-                suffixFS:SetFont(EllesmereUI.EXPRESSWAY, 11, GetNPOptOutline())
+                suffixFS:SetFont(EllesmereUI.GetOptionsFontPath(), 11, GetNPOptOutline())
                 suffixFS:SetTextColor(1, 1, 1, 0.35)
                 local sliderLabel = SliderLabel(leftFrame, "Hash Line Location")
                 if sliderLabel then
@@ -914,7 +914,7 @@ local function BuildTargetFocusHoverPage(pageName, parent, yOffset)
         local leftFrame = tfFocusRow._leftRegion
         if leftFrame then
             local suffixFS = leftFrame:CreateFontString(nil, "OVERLAY")
-            suffixFS:SetFont(EllesmereUI.EXPRESSWAY, 11, GetNPOptOutline())
+            suffixFS:SetFont(EllesmereUI.GetOptionsFontPath(), 11, GetNPOptOutline())
             suffixFS:SetTextColor(1, 1, 1, 0.35)
             local sliderLabel = SliderLabel(leftFrame, "Focus Cast Height")
             if sliderLabel then

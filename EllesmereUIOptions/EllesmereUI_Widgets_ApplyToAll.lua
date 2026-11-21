@@ -13,7 +13,7 @@ EllesmereUI._deferredInits[#EllesmereUI._deferredInits + 1] = function()
 local CreateFrame = EllesmereUI._Pool.CreateFrame
 local PoolAttach, PoolGen, PoolIsIdle = EllesmereUI._Pool.Attach, EllesmereUI._Pool.Gen, EllesmereUI._Pool.IsIdle
 local PP = EllesmereUI.PanelPP
-local EXPRESSWAY = EllesmereUI.EXPRESSWAY
+local EXPRESSWAY = EllesmereUI.GetOptionsFontPath()
 local ShowWidgetTooltip = EllesmereUI.ShowWidgetTooltip
 local HideWidgetTooltip = EllesmereUI.HideWidgetTooltip
 
@@ -184,7 +184,7 @@ local function BuildMultiApplyDropdown(anchorFrame, opts, flashTargets)
     -- Controller cursor loaded: the one gate for everything controller-only below.
     local padCP = EllesmereUI.PadCP()
     -- Options panel is Expressway-locked by design (locale-aware: CJK/Cyrillic get the system glyph font). The user's global font intentionally does not restyle the settings UI.
-    local fontPath = EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+    local fontPath = EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
 
     local menu = ma.menu
     if not menu then

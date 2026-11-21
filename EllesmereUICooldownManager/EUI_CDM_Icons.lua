@@ -443,6 +443,7 @@ do
             threshold = 86399.0001, format = "%dd", rounding = Up, step = 1,
             components = { { div = 86400 } },
         }
+        EllesmereUI.ApplyDurationFormatRules(points)
         local f = C_StringUtil.CreateNumericRuleFormatter()
         local ok = pcall(f.SetBreakpoints, f, points)
         if not ok then return nil end
@@ -489,6 +490,10 @@ do
     function ns.ApplyThresholdFormatter(cd, ss)
         if not (cd and cd.SetCountdownFormatter) then return end
         local f = FormatterFor(ss)
+        local timeFormat = EllesmereUI.GetTimeFormatDB()
+        if not f and (timeFormat.minutesClock or timeFormat.hoursClock) then
+            f = EllesmereUI.AuraKit.GetDurationFormatter()
+        end
         if f then
             if attached[cd] ~= f then
                 attached[cd] = f

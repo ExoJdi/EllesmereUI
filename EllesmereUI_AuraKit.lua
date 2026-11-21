@@ -86,6 +86,7 @@ local function SecondsRoundDown()
 end
 
 local function BuildRuleDurationFormatter(withSecondsUnit, preciseThreshold)
+    if EllesmereUI.GetTimeFormatDB().minutesClock then preciseThreshold = 5400 end
     if not (C_StringUtil and C_StringUtil.CreateNumericRuleFormatter
         and Enum.NumericRuleFormatRounding) then
         return nil
@@ -136,6 +137,7 @@ local function BuildRuleDurationFormatter(withSecondsUnit, preciseThreshold)
             days,
         }
     end
+    EllesmereUI.ApplyDurationFormatRules(points)
     local ok = pcall(formatter.SetBreakpoints, formatter, points)
     if not ok then return nil end
     return formatter

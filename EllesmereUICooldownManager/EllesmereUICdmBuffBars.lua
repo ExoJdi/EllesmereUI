@@ -38,10 +38,13 @@ ns.TBB_TEXTURE_NAMES = TBB_TEXTURE_NAMES
 --  Shared Helpers
 -------------------------------------------------------------------------------
 local function FormatTime(remaining)
+    if issecretvalue and issecretvalue(remaining) then return "" end
+    local clock = EllesmereUI.FormatDurationClock(remaining)
+    if clock then return clock end
     -- Whole SECONDS use ceil to match Blizzard's aura timers (16.5s reads "17"); flooring
     -- showed every buff one second low. Minutes/hours stay floor (unverified); sub-10s keeps tenths.
-    if remaining >= 3600 then return format("%dh", floor(remaining / 3600)) end
-    if remaining >= 60   then return format("%dm", floor(remaining / 60))   end
+    if remaining >= 3600 then return EllesmereUI.ColorDurationUnits(format("%dh", floor(remaining / 3600))) end
+    if remaining >= 60   then return EllesmereUI.ColorDurationUnits(format("%dm", floor(remaining / 60)))   end
     if remaining >= 10   then return format("%d",  ceil(remaining))         end
     return format("%.1f", remaining)
 end

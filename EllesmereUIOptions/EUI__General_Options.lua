@@ -1694,7 +1694,7 @@ initFrame:SetScript("OnEvent", function(self)
         do
             local EG = GO
             local infoFS = infoBtn:CreateFontString(nil, "OVERLAY")
-            infoFS:SetFont(EllesmereUI.EXPRESSWAY, 12, EllesmereUI.GetFontOutlineFlag())
+            infoFS:SetFont(EllesmereUI.GetOptionsFontPath(), 12, EllesmereUI.GetFontOutlineFlag())
             infoFS:SetTextColor(EG.r, EG.g, EG.b, 0.70)
             infoFS:SetText(EllesmereUI.L("What Does This Do?"))
             infoFS:SetPoint("TOP")

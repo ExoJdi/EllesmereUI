@@ -409,7 +409,7 @@ do
             -- Add "(seconds)" suffix in smaller, dimmer text
             if not EllesmereUI._prebuilding then
                 local suffix = durFrame:CreateFontString(nil, "OVERLAY")
-                suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+                suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
                 suffix:SetTextColor(1, 1, 1, 0.35)
                 local durLabel
                 local regions = { durFrame:GetRegions() }
@@ -510,7 +510,7 @@ do
             -- Add "(minutes)" suffix in smaller, dimmer text
             if not EllesmereUI._prebuilding then
                 local suffix = cdFrame:CreateFontString(nil, "OVERLAY")
-                suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+                suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
                 suffix:SetTextColor(1, 1, 1, 0.35)
                 local cdLabel
                 local regions = { cdFrame:GetRegions() }

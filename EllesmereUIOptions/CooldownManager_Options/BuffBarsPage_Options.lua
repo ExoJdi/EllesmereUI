@@ -4526,7 +4526,7 @@ local function InitBuffBarsPage(PP, DB, Refresh, FONT_PATH, GetCDMOptOutline, Ga
             local ticksLabel = maxStacksRow._rightRegion and maxStacksRow._rightRegion._label
             if ticksLabel then
                 local suffix = maxStacksRow._rightRegion:CreateFontString(nil, "OVERLAY")
-                suffix:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", 11, "")
+                suffix:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", 11, "")
                 suffix:SetTextColor(1, 1, 1, 0.35)
                 suffix:SetPoint("LEFT", ticksLabel, "RIGHT", 5, 0)
                 suffix:SetText(EllesmereUI.L("(Ex: 1,5,8)"))
@@ -4536,7 +4536,7 @@ local function InitBuffBarsPage(PP, DB, Refresh, FONT_PATH, GetCDMOptOutline, Ga
         do
             local rgn = maxStacksRow._rightRegion
             local SIDE_PAD = 20
-            local FONT = EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+            local FONT = EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
             local INPUT_W = 70
             local INPUT_H = 26
 

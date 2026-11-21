@@ -36,11 +36,11 @@ local _ftExpanded = {}
 -- Reload popup for font changes; same funnel contract as the module pages:
 -- the resolution cache must drop even when the user picks Later, because the
 -- new value is already live in the DB.
-local function FontReload()
+local function FontReload(message)
     EllesmereUI.InvalidateFontCache()
     EllesmereUI:ShowConfirmPopup({
         title       = "Reload Required",
-        message     = "Font changed. A UI reload is needed to apply the new font.",
+        message     = message or "Font changed. A UI reload is needed to apply the new font.",
         confirmText = "Reload Now",
         cancelText  = "Later",
         reload      = true,
@@ -1298,7 +1298,7 @@ function _G._EUI_BuildFontsPage(pageName, parent, yOffset)
     -------------------------------------------------------------------
     --  GLOBAL FONT section (moved from the old Fonts & Colors page)
     -------------------------------------------------------------------
-    _, h = W:SectionHeader(parent, "GLOBAL FONT", y);  y = y - h
+    _, h = W:SectionHeader(parent, "GLOBAL FONT & TIME FORMAT", y);  y = y - h
 
     -- Glyph-restricted locales (CJK, Cyrillic): most bundled fonts are Latin-only and cannot render the script, so the picker
     -- offers "System Default" plus external SharedMedia fonts (which may carry the right glyphs).
@@ -1365,6 +1365,55 @@ function _G._EUI_BuildFontsPage(pageName, parent, yOffset)
         end
         EllesmereUI.AppendSharedMediaFonts(fontDropValues, fontDropOrder, { keyByName = true })
     end
+
+    local optionsValues = { __default = "Default" }
+    local optionsOrder = { "__default", "---" }
+    for key, value in pairs(fontDropValues) do optionsValues[key] = value end
+    for _, key in ipairs(fontDropOrder) do optionsOrder[#optionsOrder + 1] = key end
+    _, h = W:DualRow(parent, y,
+        { type="dropdown", text="Settings Window Font",
+          tooltip="Font used by the settings window. Default uses Expressway or the locale fallback. Requires a UI reload.",
+          values=optionsValues, order=optionsOrder,
+          getValue=function() return EllesmereUI.GetFontsDB().optionsFont or "__default" end,
+          setValue=function(v)
+              EllesmereUI.GetFontsDB().optionsFont = v ~= "__default" and v or nil
+              FontReload()
+          end }, BLANK()); y = y - h
+
+    local function TimeToggle(label, key)
+        return { type="toggle", text=label,
+            getValue=function() return EllesmereUI.GetTimeFormatDB()[key] == true end,
+            setValue=function(v)
+                EllesmereUI.GetTimeFormatDB()[key] = v and true or false
+                FontReload("Time format changed. A UI reload is needed to apply it to all timers.")
+            end }
+    end
+    _, h = W:DualRow(parent, y,
+        TimeToggle("Minutes as M:SS", "minutesClock"),
+        TimeToggle("Hours as H:MM", "hoursClock")); y = y - h
+    _, h = W:DualRow(parent, y,
+        { type="dropdown", text="Time Unit Color",
+          tooltip="Colors m, h and d suffixes on readable duration text. Engine-managed secret timers keep their existing colors. Requires a UI reload.",
+          values={ default="Default", accent="Accent", custom="Custom" },
+          order={ "default", "accent", "custom" },
+          getValue=function() return EllesmereUI.GetTimeFormatDB().unitColor or "default" end,
+          setValue=function(v)
+              EllesmereUI.GetTimeFormatDB().unitColor = v
+              FontReload("Time format changed. A UI reload is needed to apply it to all timers.")
+          end }, BLANK()); y = y - h
+    local function UnitColor(label, unit)
+        return { type="colorpicker", text=label, hasAlpha=false,
+            getValue=function()
+                local c = EllesmereUI.GetTimeFormatDB()[unit]
+                if c then return c.r, c.g, c.b end
+                return 1, 1, 1
+            end,
+            setValue=function(r, g, b)
+                EllesmereUI.GetTimeFormatDB()[unit] = { r=r, g=g, b=b }
+            end }
+    end
+    _, h = W:DualRow(parent, y, UnitColor("Minute Unit Color", "m"), UnitColor("Hour Unit Color", "h")); y = y - h
+    _, h = W:DualRow(parent, y, UnitColor("Day Unit Color", "d"), BLANK()); y = y - h
 
     local outlineModeValues = {
         ["none"]    = { text = "Drop Shadow" },

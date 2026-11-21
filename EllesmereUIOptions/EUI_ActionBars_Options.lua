@@ -208,7 +208,7 @@ initFrame:SetScript("OnEvent", function(self)
             end
 
             local label = editOverlayFrame:CreateFontString(nil, "OVERLAY")
-            local fontPath = EllesmereUI and EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+            local fontPath = EllesmereUI and EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
             label:SetFont(fontPath, 10, EllesmereUI.GetFontOutlineFlag())
             label:SetTextColor(1, 1, 1, 0.75)
             label:SetPoint("CENTER")
