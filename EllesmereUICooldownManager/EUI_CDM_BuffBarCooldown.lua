@@ -100,8 +100,8 @@ local function _styleTBBChargeHashFill(bar, cfg)
     local fB, fA = bar._baseFillB or _classB, bar._baseFillA or 1
     local gradientEnabled = cfg.gradientEnabled and true or false
     local gradientDir = cfg.gradientDir or "HORIZONTAL"
-    local gR, gG = cfg.gradientR or 0.20, cfg.gradientG or 0.20
-    local gB, gA = cfg.gradientB or 0.80, cfg.gradientA or 1
+    local gR, gG = bar._baseGradientR or cfg.gradientR or 0.20, bar._baseGradientG or cfg.gradientG or 0.20
+    local gB, gA = bar._baseGradientB or cfg.gradientB or 0.80, cfg.gradientA or 1
     -- SCALAR style signature: unchanged active bars take this branch without allocating a temporary table/key string every tick.
     if bar._chargeHashFillStyleValid
        and bar._chargeHashFillStyleTexPath == texPath

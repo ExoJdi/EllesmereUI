@@ -41,6 +41,7 @@ local GRADIENT_DIR_VALUES = {
     ["VERTICAL_REV"] = "Bottom to Top",
 }
 local GRADIENT_DIR_ORDER = { "HORIZONTAL", "HORIZONTAL_REV", "VERTICAL", "VERTICAL_REV" }
+local gradientSelection = {}
 
 function _G._EUI_BuildColorsPage(pageName, parent, yOffset)
     local W = EllesmereUI.Widgets
@@ -65,6 +66,94 @@ function _G._EUI_BuildColorsPage(pageName, parent, yOffset)
         db[category][key] = data
         EllesmereUI.ApplyColorsToOUF()
     end
+
+    local function RefreshGradients()
+        EllesmereUI.RefreshDarkMode()
+        EllesmereUI:ShowConfirmPopup({ title = "Reload Required",
+            message = "Reload to apply gradient and resource series changes to all bars.",
+            confirmText = "Reload Now", cancelText = "Later", reload = true })
+    end
+    local function GradientRows(category, defaults, labels)
+        local values, order = {}, {}
+        for key in pairs(defaults) do
+            values[key] = labels[key] or key
+            order[#order + 1] = key
+        end
+        table.sort(order)
+        gradientSelection[category] = gradientSelection[category] or order[1]
+        local function Endpoint(which)
+            local key = gradientSelection[category]
+            local entries = GetCustomColorsDB()[category .. "Gradients"]
+            local entry = entries and entries[key]
+            local color = entry and entry[which]
+            if color then return color.r, color.g, color.b, 1 end
+            local base = EllesmereUI._colorCache[category][key] or defaults[key]
+            local factor = which == "start" and 1 or 0.6
+            return base.r * factor, base.g * factor, base.b * factor, 1
+        end
+        local function Swatch(which, label)
+            return { tooltip = label, hasAlpha = false,
+                getValue = function() return Endpoint(which) end,
+                setValue = function(r, g, b)
+                    local key = gradientSelection[category]
+                    local entries = GetCustomColorsDB()[category .. "Gradients"]
+                    local entry = entries[key] or {}
+                    entry[which] = { r=r, g=g, b=b }
+                    SaveColorEntry(category .. "Gradients", key, entry)
+                    RefreshGradients()
+                end }
+        end
+        _, h = W:DualRow(parent, y,
+            { type="dropdown", text="Gradient Entry", values=values, order=order,
+              getValue=function() return gradientSelection[category] end,
+              setValue=function(v) gradientSelection[category] = v; EllesmereUI:RefreshPage() end },
+            { type="multiSwatch", text="Gradient Colors",
+              swatches={ Swatch("start", "Start Color"), Swatch("finish", "End Color") } })
+        y = y - h
+    end
+
+    _, h = W:SectionHeader(parent, "SHARED GRADIENTS AND RESOURCE SERIES", y); y = y - h
+    local function Toggle(key, label)
+        return { type="toggle", text=label,
+            getValue=function() return EllesmereUI.GetDarkModeDB()[key] == true end,
+            setValue=function(v) EllesmereUI.GetDarkModeDB()[key] = v; RefreshGradients() end }
+    end
+    local function Limit(key, label, fallback, lowerKey, lowerDefault, upperKey, upperDefault)
+        return { type="slider", text=label, min=0, max=19, step=1,
+            getValue=function() return EllesmereUI.GetDarkModeDB()[key] or fallback end,
+            setValue=function(v)
+                local d = EllesmereUI.GetDarkModeDB()
+                local low = lowerKey and ((d[lowerKey] or lowerDefault) + 1) or 0
+                local high = upperKey and ((d[upperKey] or upperDefault) - 1) or 19
+                d[key] = math.max(low, math.min(high, v)); RefreshGradients()
+            end }
+    end
+    _, h = W:DualRow(parent, y, Toggle("paletteGradients", "Shared Gradient Colors"),
+        Toggle("darkGradients", "Gradients in Dark Unit Frames")); y = y - h
+    _, h = W:DualRow(parent, y, Toggle("resourceGradients", "Class Resource Gradients"),
+        { type="dropdown", text="Class Resource Gradient Direction", values=GRADIENT_DIR_VALUES, order=GRADIENT_DIR_ORDER,
+          getValue=function() return EllesmereUI.GetDarkModeDB().resourceGradientDir or "HORIZONTAL" end,
+          setValue=function(v) EllesmereUI.GetDarkModeDB().resourceGradientDir = v; RefreshGradients() end }); y = y - h
+    _, h = W:DualRow(parent, y, Toggle("resourceSeries", "Class Resource Series Color"),
+        Limit("seriesLow", "Low Count Up To", 2, nil, nil, "seriesMid", 4)); y = y - h
+    _, h = W:DualRow(parent, y,
+        Limit("seriesMid", "Middle Count Up To", 4, "seriesLow", 2, "seriesHigh", 5),
+        Limit("seriesHigh", "High Count Up To", 5, "seriesMid", 4)); y = y - h
+    local function SeriesSwatch(index, label)
+        return { type="colorpicker", text=label, hasAlpha=false,
+            getValue=function()
+                local d = EllesmereUI.GetDarkModeDB()
+                local c = d.seriesColors and d.seriesColors[index] or EllesmereUI.DEFAULT_RESOURCE_SERIES[index]
+                return c.r, c.g, c.b, 1
+            end,
+            setValue=function(r, g, b)
+                local d = EllesmereUI.GetDarkModeDB()
+                d.seriesColors = d.seriesColors or {}; d.seriesColors[index] = { r=r, g=g, b=b }
+                RefreshGradients()
+            end }
+    end
+    _, h = W:DualRow(parent, y, SeriesSwatch(1, "Low Count Color"), SeriesSwatch(2, "Middle Count Color")); y = y - h
+    _, h = W:DualRow(parent, y, SeriesSwatch(3, "High Count Color"), SeriesSwatch(4, "Overflow Count Color")); y = y - h
 
     -------------------------------------------------------------------
     --  Shared 4-column color grid builder
@@ -396,6 +485,7 @@ function _G._EUI_BuildColorsPage(pageName, parent, yOffset)
 
     h = BuildColorGrid(parent, y, classItems)
     y = y - h
+    GradientRows("class", CLASS_COLOR_MAP, CLASS_LABELS)
     _colorGates[#_colorGates].bot = y
 
     _, h = W:Spacer(parent, y, 20);  y = y - h
@@ -434,6 +524,7 @@ function _G._EUI_BuildColorsPage(pageName, parent, yOffset)
 
     h = BuildColorGrid(parent, y, powerItems)
     y = y - h
+    GradientRows("power", DEFAULT_POWER_COLORS, POWER_LABELS)
     _colorGates[#_colorGates].bot = y
 
     _, h = W:Spacer(parent, y, 20);  y = y - h
@@ -483,6 +574,7 @@ function _G._EUI_BuildColorsPage(pageName, parent, yOffset)
         h = BuildColorGrid(parent, y, resourceItems)
     end
     y = y - h
+    GradientRows("classResource", EllesmereUI.DEFAULT_CLASS_RESOURCE_COLORS, RESOURCE_LABELS)
     _colorGates[#_colorGates].bot = y
 
     _, h = W:Spacer(parent, y, 20);  y = y - h

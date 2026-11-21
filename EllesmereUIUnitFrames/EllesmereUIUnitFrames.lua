@@ -1409,7 +1409,15 @@ end
 local _gradColorA = CreateColor(1, 1, 1, 1)
 local _gradColorB = CreateColor(1, 1, 1, 1)
 
-local function ApplyBarGradient(ft, dir, br, bg, bb, ba, er, eg, eb, ea)
+local function ApplyBarGradient(ft, dir, br, bg, bb, ba, er, eg, eb, ea, category, key)
+    if EllesmereUI.IsSecretColor(br, bg, bb, ba) or EllesmereUI.IsSecretColor(er, eg, eb, ea) then
+        ft:SetVertexColor(br, bg, bb, ba)
+        return
+    end
+    if category and EllesmereUI._paletteGradients then
+        local first, last = EllesmereUI.GetGradientColors(category, key)
+        if first then br, bg, bb, er, eg, eb = first.r, first.g, first.b, last.r, last.g, last.b end
+    end
     ft:SetVertexColor(1, 1, 1, 1)
     _gradColorA:SetRGBA(br, bg, bb, ba)
     _gradColorB:SetRGBA(er, eg, eb, ea)
@@ -2260,6 +2268,18 @@ local function ApplyDarkTheme(health, unit)
         health.PostUpdateColor = function(self)
             local fr, fg, fb = EllesmereUI.GetDarkModeFill()
             self:SetStatusBarColor(fr, fg, fb)
+            local s = self._euiUnitKey and db.profile[self._euiUnitKey]
+            if s and s.gradientEnabled and EllesmereUI.GradientsInDarkMode() then
+                local gc = s.gradientColor
+                local ga = s.healthBarOpacity or 90
+                if ga > 1 then ga = ga / 100 end
+                local key = EllesmereUI._paletteGradients and EllesmereUI.UnitGradientKey(unit or "player", true)
+                local category = s.healthClassColored and "class" or nil
+                ApplyBarGradient(self:GetStatusBarTexture(), s.gradientDir or "HORIZONTAL",
+                    fr, fg, fb, ga, gc and gc.r or 0.20, gc and gc.g or 0.20, gc and gc.b or 0.80, ga,
+                    category, key)
+                self:GetStatusBarTexture():SetAlpha(1)
+            end
             if self.bg then
                 AnchorHealthBg(self)
             end
@@ -2343,7 +2363,9 @@ local function ApplyDarkTheme(health, unit)
                 if ga > 1.0 then ga = ga / 100 end
                 ApplyBarGradient(self:GetStatusBarTexture(), uSettings.gradientDir or "HORIZONTAL",
                     bR, bG, bB, ga,
-                    gc and gc.r or 0.20, gc and gc.g or 0.20, gc and gc.b or 0.80, ga)
+                    gc and gc.r or 0.20, gc and gc.g or 0.20, gc and gc.b or 0.80, ga,
+                    not haveDyn and classColored and "class" or nil,
+                    EllesmereUI._paletteGradients and EllesmereUI.UnitGradientKey(uKey == "pet" and "player" or unit, true))
             elseif haveDyn then
                 -- Must be written explicitly: the health element painted the flat
                 -- class/reaction color a moment ago, and unlike the pet/custom

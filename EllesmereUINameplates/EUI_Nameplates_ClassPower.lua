@@ -619,6 +619,8 @@ local function UpdateClassPowerOnPlate(plate)
         cpColor = { cc.r, cc.g, cc.b }
     end
 
+    local series = not isSecret and EllesmereUI._seriesSettings and EllesmereUI.GetResourceSeriesColor(cur)
+    if series then cpColor = { series.r, series.g, series.b } end
     local emptyCol = ns.GetClassPowerEmptyColor()
 
     local leftAnchor = (anchorPoint == "BOTTOM") and "BOTTOMLEFT" or "TOPLEFT"
@@ -715,7 +717,8 @@ local function UpdateClassPowerOnPlate(plate)
                     if i <= cur then
                         pip:SetAtlas("nameplates-holypower" .. idx .. "-on")
                         if flip then pip:SetTexCoord(1, 0, 0, 1) end
-                        pip:SetVertexColor(1, 1, 1, 1)
+                        if series then pip:SetVertexColor(series.r, series.g, series.b, 1)
+                        else pip:SetVertexColor(1, 1, 1, 1) end
                         pip:Show()
                     else
                         pip:Hide()
@@ -726,7 +729,8 @@ local function UpdateClassPowerOnPlate(plate)
                     if (i > cur) and ns.CP_ICON_DIM_EMPTY[iconKind] then
                         pip:SetVertexColor(0.35, 0.35, 0.35, 1)  -- dim single-atlas empties
                     else
-                        pip:SetVertexColor(1, 1, 1, 1)
+                        if series and i <= cur then pip:SetVertexColor(series.r, series.g, series.b, 1)
+                        else pip:SetVertexColor(1, 1, 1, 1) end
                     end
                     pip:Show()
                 else

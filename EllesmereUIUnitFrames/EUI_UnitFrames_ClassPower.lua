@@ -497,10 +497,21 @@ local function CreateCustomClassPower(playerFrame, style)
             end
         else
             -- Clean-value path
+            local series = EllesmereUI._seriesSettings and EllesmereUI.GetResourceSeriesColor(cur)
             for i = 1, #pips do
                 if pips[i] then
                     if pips[i]._secretBar then pips[i]._secretBar:Hide() end
                     if pips[i]._fill then
+                        if series then
+                            pips[i]._fill:SetVertexColor(series.r, series.g, series.b, 1)
+                        elseif EllesmereUI._resourceGradients and useClassColor then
+                            local key = EllesmereUI.ResourceGradientKey(powerType, playerClass)
+                            local first, last = EllesmereUI.GetGradientColors("classResource", key)
+                            if first then
+                                I.ApplyBarGradient(pips[i]._fill, EllesmereUI._resourceGradientDir,
+                                    first.r, first.g, first.b, 1, last.r, last.g, last.b, 1)
+                            end
+                        end
                         if i <= cur then
                             pips[i]._fill:Show()
                         else
