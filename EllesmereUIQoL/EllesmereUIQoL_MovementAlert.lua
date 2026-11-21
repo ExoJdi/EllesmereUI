@@ -532,6 +532,7 @@ local function GetDisplaySlot(index)
     return displayPool[index]
 end
 
+local SyncMovementNotifications, RestoreMovementNotifications, movementNotificationsActive
 local function LayoutDisplaySlots(count)
     local frameW, frameH = movementFrame:GetWidth(), movementFrame:GetHeight()
     for i = 1, count do
@@ -546,6 +547,7 @@ local function LayoutDisplaySlots(count)
             end
         end
     end
+    if SyncMovementNotifications then SyncMovementNotifications() end
 end
 
 local function StyleSlot(slot)
@@ -610,6 +612,51 @@ local function StyleSlot(slot)
     end
 
     slot.icon:SetSize(iconSz, iconSz)
+end
+
+-------------------------------------------------------------------------------
+--  General Notification slot layout
+-------------------------------------------------------------------------------
+RestoreMovementNotifications = function()
+    for _, slot in ipairs(displayPool) do
+        slot._style = nil
+        slot.bar:ClearAllPoints()
+        slot.bar:SetPoint("CENTER")
+        StyleSlot(slot)
+    end
+    LayoutDisplaySlots(activeSlotCount)
+end
+
+SyncMovementNotifications = function()
+    local gn, ma = EllesmereUI.GeneralNotification, MA()
+    if not gn or not ma then return end
+    local enabled = ma.generalNotification and ma.displayMode ~= "icon"
+        and EllesmereUI.QoLExtrasGet("generalNotificationEnabled") and MovementEnabled()
+    if not enabled and not movementNotificationsActive then return end
+    movementNotificationsActive = enabled and #displayPool > 0
+    for i, slot in ipairs(displayPool) do
+        local left, right = 0, 0
+        if slot._maKind == "engine" then
+            local size = math.max(8, math.min(72, ma.textSize or 24))
+            local reserve = size * ((tonumber(ma.precision) or 1) > 0 and 2.4 or 1.6) + math.max(2, size * 0.15)
+            if ma.displayMode == "text_d" then
+                local grow = EllesmereUI.QoLExtrasGet("generalNotificationGrow")
+                local inset = math.max(0, gn.GetWidth() - reserve)
+                if grow == "LEFT" then right = inset elseif grow == "RIGHT" then left = inset end
+            elseif ma.displayMode == "text_nd" then right = reserve else left = reserve end
+        end
+        local text = ma.displayMode ~= "bar" and slot.text or nil
+        if gn.Sync(slot, text, enabled, 10 + i, RestoreMovementNotifications, left, right) and not text then
+            local inset = ma.barShowIcon ~= false and (slot.bar:GetHeight() + 4) or 0
+            local barWidth = math.max(50, movementFrame:GetWidth() - (ma.barShowIcon ~= false and (slot.bar:GetHeight() + 8) or 0) - 10)
+            local width = math.min(gn.GetWidth(), barWidth + inset)
+            slot:SetSize(width, math.max(movementFrame:GetHeight(), slot.bar:GetHeight() + 8))
+            slot.bar:SetWidth(math.max(1, width - inset))
+            slot.bar:ClearAllPoints()
+            slot.bar:SetPoint("CENTER", slot, "CENTER", inset / 2, 0)
+        end
+    end
+    gn.Layout()
 end
 
 -------------------------------------------------------------------------------
@@ -1804,6 +1851,7 @@ local function RepaintMovementSlots(now)
             slot.bar:SetValue(slot._maDur:GetRemainingDuration())
         end
     end
+    if EllesmereUI.GeneralNotification then EllesmereUI.GeneralNotification.Layout() end
     return true
 end
 
@@ -1957,6 +2005,7 @@ local function ApplyMovementFrame()
         movementFrame:SetSize(200, 40)
     end
     for _, slot in ipairs(displayPool) do StyleSlot(slot) end
+    if ma.generalNotification or movementNotificationsActive then LayoutDisplaySlots(activeSlotCount) end
     if MovementEnabled() and not (EllesmereUI._unlockActive) then CheckMovementCooldown() end
 end
 EllesmereUI._applyMovementAlert = ApplyMovementFrame
@@ -2152,6 +2201,7 @@ local function UpdateTimeSpiralCountdown()
     if remaining > 0 then
         local fmtStr = (ma.tsTextFormat or "FREE MOVEMENT\\n%.1f"):gsub("\\n", "\n")
         timeSpiralText:SetFormattedText(fmtStr, remaining)
+        if EllesmereUI.GeneralNotification then EllesmereUI.GeneralNotification.Layout() end
         timeSpiralFrame:Show()
         timeSpiralCountdownTimer = C_Timer.NewTimer(0.1, UpdateTimeSpiralCountdown)
     else
@@ -2169,6 +2219,7 @@ local function ApplyTimeSpiralFrame()
     -- timer (the one thing that would otherwise hide it) -- explicitly hide
     -- here so it can't get stuck on screen.
     if not ma.tsEnabled then
+        if EllesmereUI.GeneralNotification then EllesmereUI.GeneralNotification.Detach(timeSpiralFrame) end
         timeSpiralActiveTime = nil
         CancelTimeSpiralCountdown()
         timeSpiralFrame:Hide()
@@ -2188,6 +2239,11 @@ local function ApplyTimeSpiralFrame()
     if not timeSpiralText:SetFont(fontPath, fontSize, outline) then timeSpiralText:SetFont(FALLBACK_FONT, fontSize, outline) end
     local r, g, b = ResolveAlertColor("tsColor", "tsColorUseClass")
     timeSpiralText:SetTextColor(r, g, b)
+    local gn = EllesmereUI.GeneralNotification
+    if gn then
+        gn.Sync(timeSpiralFrame, timeSpiralText, ma.tsGeneralNotification, 5, ApplyTimeSpiralFrame)
+        gn.Layout()
+    end
 end
 EllesmereUI._applyTimeSpiral = ApplyTimeSpiralFrame
 
@@ -2239,6 +2295,7 @@ local function CheckGatewayUsable()
         if txt ~= lastGatewayText then
             lastGatewayText = txt
             gatewayText:SetText(txt)
+            if EllesmereUI.GeneralNotification then EllesmereUI.GeneralNotification.Layout() end
         end
         if not gatewayFrame:IsShown() then gatewayFrame:Show() end
     elseif gatewayFrame:IsShown() then
@@ -2277,6 +2334,11 @@ local function ApplyGatewayFrame()
     if not gatewayText:SetFont(fontPath, fontSize, outline) then gatewayText:SetFont(FALLBACK_FONT, fontSize, outline) end
     local r, g, b = ResolveAlertColor("gwColor", "gwColorUseClass")
     gatewayText:SetTextColor(r, g, b)
+    local gn = EllesmereUI.GeneralNotification
+    if gn then
+        gn.Sync(gatewayFrame, gatewayText, ma.gwEnabled and ma.gwGeneralNotification, 6, ApplyGatewayFrame)
+        gn.Layout()
+    end
     if not ma.gwEnabled then
         StopGatewayPolling()
         gatewayFrame:Hide()
@@ -2427,6 +2489,18 @@ loader:SetScript("OnEvent", function(self, event, ...)
                     -- isHiddenKey: profile key name, or a predicate function
                     -- (the movement tracker's enable state is per-class).
                     isHidden = function()
+                        local ma = MA()
+                        local attached = posKey == "pos" and ma.generalNotification and ma.displayMode ~= "icon"
+                            or posKey == "tsPos" and ma.tsGeneralNotification
+                            or posKey == "gwPos" and ma.gwGeneralNotification
+                        if EllesmereUI.QoLExtrasGet("generalNotificationEnabled") and attached then
+                            if posKey == "pos" then
+                                for _, entry in ipairs(cachedMovementSpells) do
+                                    if entry.checkType == "buffActive" then return not MovementEnabled() end
+                                end
+                            end
+                            return true
+                        end
                         if type(isHiddenKey) == "function" then return not isHiddenKey() end
                         return not MA()[isHiddenKey]
                     end,

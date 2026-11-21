@@ -24,6 +24,153 @@ local GAP = 4
 local function DB(key) return EUI.QoLExtrasGet(key) end
 
 -------------------------------------------------------------------------------
+--  General Notification (addon-owned frames only)
+-------------------------------------------------------------------------------
+local GN = {}
+EUI.GeneralNotification = GN
+do
+    local anchor, entries, byFrame, registered, layingOut
+    local function Width() return math.max(160, math.min(1200, tonumber(DB("generalNotificationWidth")) or 400)) end
+    local function Position()
+        return DB("generalNotificationPos") or { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 }
+    end
+    local function Place()
+        if not anchor then return end
+        local p = Position()
+        anchor:ClearAllPoints()
+        anchor:SetPoint(p.point, UIParent, p.relPoint or p.point, p.x or 0, p.y or 0)
+    end
+    local function EnsureAnchor()
+        if anchor then return end
+        entries, byFrame = {}, {}
+        anchor = CreateFrame("Frame", nil, UIParent)
+        anchor:EnableMouse(false)
+        anchor:SetSize(Width(), 36)
+        Place()
+    end
+    GN.GetWidth = Width
+    local function ResetText(fs)
+        if not fs then return end
+        fs:ClearAllPoints()
+        fs:SetPoint("CENTER")
+        fs:SetWidth(0); fs:SetHeight(0)
+        fs:SetWordWrap(true); fs:SetNonSpaceWrap(false)
+        fs:SetJustifyH("CENTER")
+    end
+    function GN.IsAttached(frame) return byFrame and byFrame[frame] ~= nil end
+    function GN.Layout()
+        if not anchor or layingOut or not DB("generalNotificationEnabled") then return end
+        layingOut = true
+        local width, offset = Width(), 0
+        local grow = DB("generalNotificationGrow") or "CENTER"
+        if grow ~= "LEFT" and grow ~= "RIGHT" then grow = "CENTER" end
+        local point = grow == "CENTER" and "TOP" or ("TOP" .. grow)
+        local wrap = DB("generalNotificationWrap") == true
+        for _, entry in ipairs(entries) do
+            local f, fs = entry.frame, entry.text
+            if f:IsVisible() then
+                if fs then
+                    local left, right = entry.left or 0, entry.right or 0
+                    fs:ClearAllPoints()
+                    fs:SetPoint(point, f, point, grow == "LEFT" and left or (grow == "RIGHT" and -right or (left - right) / 2), 0)
+                    fs:SetWidth(math.max(1, width - left - right))
+                    fs:SetHeight(0)
+                    fs:SetJustifyH(grow)
+                    fs:SetWordWrap(wrap)
+                    fs:SetNonSpaceWrap(wrap)
+                    local _, fontSize = fs:GetFont()
+                    local minimum = (fontSize or DEFAULT_SIZE) + 14
+                    local height = fs:GetStringHeight()
+                    if (issecretvalue and issecretvalue(height)) or type(height) ~= "number" then
+                        height = minimum
+                        fs:SetHeight(height)
+                    end
+                    f:SetSize(width, math.max(minimum, height + 8))
+                end
+                f:ClearAllPoints()
+                f:SetPoint(point, anchor, point, 0, -offset)
+                offset = offset + f:GetHeight() + GAP
+            end
+        end
+        anchor:SetSize(width, 36)
+        layingOut = false
+    end
+    function GN.Detach(frame)
+        local entry = byFrame and byFrame[frame]
+        if not entry then return end
+        byFrame[frame] = nil
+        for i, e in ipairs(entries) do if e == entry then table.remove(entries, i); break end end
+        frame:SetScript("OnShow", entry.onShow)
+        frame:SetScript("OnHide", entry.onHide)
+        frame:SetSize(entry.width, entry.height)
+        ResetText(entry.text)
+        if entry.restore then entry.restore() end
+        GN.Layout()
+    end
+    function GN.Sync(frame, text, enabled, order, restore, left, right)
+        if not enabled or not DB("generalNotificationEnabled") then GN.Detach(frame); return false end
+        EnsureAnchor()
+        local entry = byFrame[frame]
+        if not entry then
+            entry = { frame = frame, text = text, order = order, restore = restore,
+                width = frame:GetWidth(), height = frame:GetHeight(),
+                onShow = frame:GetScript("OnShow"), onHide = frame:GetScript("OnHide") }
+            byFrame[frame] = entry
+            entries[#entries + 1] = entry
+            table.sort(entries, function(a, b) return a.order < b.order end)
+            frame:SetScript("OnShow", function(self, ...)
+                if entry.onShow then entry.onShow(self, ...) end
+                GN.Layout()
+            end)
+            frame:SetScript("OnHide", function(self, ...)
+                if entry.onHide then entry.onHide(self, ...) end
+                GN.Layout()
+            end)
+        end
+        if entry.text ~= text then ResetText(entry.text) end
+        entry.text, entry.left, entry.right = text, left, right
+        return true
+    end
+    local function RegisterUnlock()
+        if registered then return end
+        registered = true
+        EUI:RegisterUnlockElements({ EUI.MakeUnlockElement({
+            key = "EUI_GeneralNotification", label = "General Notification", group = "Quality of Life", order = 719,
+            noResize = true,
+            isHidden = function() return not DB("generalNotificationEnabled") end,
+            getFrame = function() if DB("generalNotificationEnabled") then EnsureAnchor(); return anchor end end,
+            getSize = function() return Width(), anchor and anchor:GetHeight() or 36 end,
+            savePos = function(_, point, relPoint, x, y)
+                if not point then return end
+                EUI.QoLExtrasSet("generalNotificationPos", { point = point, relPoint = relPoint, x = x, y = y })
+                if not EUI._unlockActive then Place(); GN.Layout() end
+            end,
+            loadPos = Position,
+            clearPos = function() EUI.QoLExtrasSet("generalNotificationPos", false); Place(); GN.Layout() end,
+            applyPos = function() Place(); GN.Layout() end,
+        }) })
+    end
+    function GN.Apply()
+        if DB("generalNotificationEnabled") then
+            RegisterUnlock(); EnsureAnchor(); Place()
+        elseif not entries or not entries[1] then
+            return
+        else
+            while entries[1] do GN.Detach(entries[1].frame) end
+            if EUI._applyMovementAlert then EUI._applyMovementAlert() end
+            return
+        end
+        if EUI.Alerts then EUI.Alerts.Refresh() end
+        if EUI._applyGroupDeathAlert then EUI._applyGroupDeathAlert() end
+        if EUI._applyMovementAlert then EUI._applyMovementAlert() end
+        if EUI._applyTimeSpiral then EUI._applyTimeSpiral() end
+        if EUI._applyGateway then EUI._applyGateway() end
+        GN.Layout()
+    end
+    EUI._applyGeneralNotification = GN.Apply
+end
+
+-------------------------------------------------------------------------------
 --  Core: anchor + stacked lines
 -------------------------------------------------------------------------------
 local Alerts = {}
@@ -49,6 +196,13 @@ local function SizeOf(def) return DB(def.sizeKey) or DEFAULT_SIZE end
 local function AnyEnabled()
     for _, def in ipairs(DEFS) do
         if DB(def.enabledKey) then return true end
+    end
+    return false
+end
+
+local function AnyStandaloneEnabled()
+    for _, def in ipairs(DEFS) do
+        if DB(def.enabledKey) and not (DB("generalNotificationEnabled") and DB(def.id .. "AlertGeneralNotification")) then return true end
     end
     return false
 end
@@ -90,14 +244,16 @@ end
 local function Layout()
     if not anchor then return end
     local offset = 0
-    for _, def in ipairs(DEFS) do
+    for i, def in ipairs(DEFS) do
         local line = lines[def.id]
-        if line and line.frame:IsShown() then
+        local attached = line and GN.Sync(line.frame, line.text, DB(def.enabledKey) and DB(def.id .. "AlertGeneralNotification"), i, Alerts.Refresh)
+        if line and line.frame:IsShown() and not attached then
             line.frame:ClearAllPoints()
             line.frame:SetPoint("TOP", anchor, "TOP", 0, -offset)
             offset = offset + line.frame:GetHeight() + GAP
         end
     end
+    GN.Layout()
 end
 
 local function Style(line)
@@ -152,6 +308,7 @@ local function NewLine(def)
         EnsureAnchor(); PlaceAnchor(); Style(line)
         fs:SetText(text)
         fs:SetTextColor(r or 1, g or 1, b or 1)
+        Layout()
         if real and line.persistentShown then return end   -- already up: only the text changed
         short:Stop(); stay:Stop()
         f:SetAlpha(1)
@@ -217,9 +374,9 @@ local function RegisterUnlock()
             group    = "Quality of Life",
             order    = 721,
             noResize = true,
-            isHidden = function() return not AnyEnabled() end,
+            isHidden = function() return not AnyStandaloneEnabled() end,
             getFrame = function()
-                if not AnyEnabled() then return nil end   -- nothing is built while all are off
+                if not AnyStandaloneEnabled() then return nil end
                 EnsureAnchor()
                 return anchor
             end,
@@ -254,6 +411,7 @@ coreBoot:RegisterEvent("PLAYER_LOGIN")
 coreBoot:SetScript("OnEvent", function(self)
     self:UnregisterAllEvents()
     RegisterUnlock()
+    GN.Apply()
 end)
 
 -------------------------------------------------------------------------------

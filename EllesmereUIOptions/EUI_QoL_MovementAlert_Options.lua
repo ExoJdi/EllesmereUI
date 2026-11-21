@@ -583,6 +583,12 @@ local function BuildMovementAlertPage(pageName, parent, yOffset)
         EllesmereUI.BuildInlineCog(leftRgn, {
             title = "Display Size",
             rows = {
+                { type="toggle", label="Attach to General Notification",
+                  disabled=function() return maOff() or ma.displayMode == "icon" end,
+                  disabledTooltip="Requires an enabled movement alert in Text or Bar mode", rawTooltip=true,
+                  tooltip="Attach cooldown alerts to the shared anchor. Engine-owned active-buff alerts keep their standalone position.",
+                  get=function() return ma.generalNotification == true end,
+                  set=function(v) ma.generalNotification = v; Refresh() end },
                 -- Never disabled: sizes the free text, the bar's number, and
                 -- the icon's countdown numbers alike. Re-seeded on text <->
                 -- bar/icon display mode switches (24 / 12).
@@ -1037,6 +1043,9 @@ local function BuildMovementAlertPage(pageName, parent, yOffset)
             title = "Time Spiral Settings",
             minWidth = 300,
             rows = {
+                { type="toggle", label="Attach to General Notification",
+                  get=function() return ma.tsGeneralNotification == true end,
+                  set=function(v) ma.tsGeneralNotification = v; Refresh() end },
                 { type="input", label="Text Format",
                   get=function() return ma.tsTextFormat or "FREE MOVEMENT\\n%.1f" end,
                   set=function(v) ma.tsTextFormat = v; Refresh() end },
@@ -1085,6 +1094,9 @@ local function BuildMovementAlertPage(pageName, parent, yOffset)
             title = "Gateway Shard Settings",
             minWidth = 300,
             rows = {
+                { type="toggle", label="Attach to General Notification",
+                  get=function() return ma.gwGeneralNotification == true end,
+                  set=function(v) ma.gwGeneralNotification = v; Refresh() end },
                 { type="toggle", label="Combat Only",
                   tooltip="Only show the alert while in combat.",
                   get=function() return ma.gwCombatOnly == true end,

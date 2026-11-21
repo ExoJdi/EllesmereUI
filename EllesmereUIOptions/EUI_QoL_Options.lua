@@ -2788,6 +2788,14 @@ initFrame:SetScript("OnEvent", function(self)
                 -- The on-screen elements follow profiles: this profile's own values go too,
                 -- so it reads the cleared account-wide ones.
                 for _, k in ipairs({
+                    "generalNotificationEnabled", "generalNotificationWidth", "generalNotificationGrow",
+                    "generalNotificationWrap", "generalNotificationPos", "combatAlertGeneralNotification",
+                    "potionAlertGeneralNotification", "talentAlertGeneralNotification", "groupDeathGeneralNotification",
+                }) do
+                    EllesmereUIDB[k] = nil
+                    EllesmereUI.QoLExtrasSet(k, nil)
+                end
+                for _, k in ipairs({
                     "targetDistanceEnabled", "targetDistanceFormat", "targetDistanceAlign",
                     "targetDistanceTextSize", "targetDistanceStrata", "targetDistancePos",
                     "announceGroupDeaths", "groupDeathTextSize", "groupDeathAlertPos", "groupDeathSound",
@@ -2813,6 +2821,7 @@ initFrame:SetScript("OnEvent", function(self)
                 if EllesmereUIDB.unlockAnchors then
                     EllesmereUIDB.unlockAnchors.EUI_TargetDistance = nil
                     EllesmereUIDB.unlockAnchors.EUI_CombatAlert = nil
+                    EllesmereUIDB.unlockAnchors.EUI_GeneralNotification = nil
                     EllesmereUIDB.unlockAnchors.EUI_BattleRes = nil
                     EllesmereUIDB.unlockAnchors.EUI_Bloodlust = nil
                 end
