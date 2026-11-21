@@ -1295,6 +1295,39 @@ function ns.AskDeleteCategory(key)
 end
 
 -- Show context menu for grouping categories
+local function CustomCategorySettings(root, cat, changed, anchor)
+    local filters = root:CreateButton(EllesmereUI.L("Rule Filters"))
+    for _, rule in ipairs(EUI_CategoryManager:GetRuleFilters()) do
+        filters:CreateCheckbox(EllesmereUI.L(rule.name), function()
+            return cat.filters and cat.filters[rule.key] == true
+        end, function()
+            cat.filters = cat.filters or {}
+            cat.filters[rule.key] = not cat.filters[rule.key] or nil
+            if not next(cat.filters) then cat.filters = nil end
+            changed()
+        end)
+    end
+    root:CreateCheckbox(EllesmereUI.L("Hide when empty"), function() return cat.hideWhenEmpty == true end, function()
+        cat.hideWhenEmpty = not cat.hideWhenEmpty or nil
+        changed()
+    end)
+    root:CreateButton(EllesmereUI.L("Category Color"), function()
+        EUI:EnsureLoaded()
+        local was = cat.color
+        local c = was or { r=1, g=1, b=1 }
+        EUI:ShowColorPicker({ r=c.r, g=c.g, b=c.b, hasOpacity=false,
+            swatchFunc=function()
+                local r, g, b = EUI._colorPickerPopup:GetColorRGB()
+                cat.color = { r=r, g=g, b=b }; changed()
+            end,
+            cancelFunc=function() cat.color = was; changed() end,
+        }, anchor)
+    end)
+    if cat.color then
+        root:CreateButton(EllesmereUI.L("Reset Color"), function() cat.color = nil; changed() end)
+    end
+end
+
 local function ShowCategoryContextMenu(btn, catIdx, isGroupHeader, isGroupMember)
     local cats = EUI_CategoryManager:GetCategories()
     local cat = cats[catIdx]
@@ -1303,6 +1336,13 @@ local function ShowCategoryContextMenu(btn, catIdx, isGroupHeader, isGroupMember
     if cat.isEquipSet or cat.isVirtual then return end
 
     MenuUtil.CreateContextMenu(btn, function(_, rootDescription)
+        if cat.isUserCreated and not isGroupHeader then
+            CustomCategorySettings(rootDescription, cat, function()
+                EUI_CategoryManager:SaveState()
+                EUI_Bags:RefreshInventory()
+            end, btn)
+            rootDescription:CreateDivider()
+        end
         -- Pinned Items and Recent Items: the views menu's boxes come first
         if cat.isPinned or cat.isRecent then
             AddViewBoxes(rootDescription)
@@ -1570,6 +1610,16 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
     end
 
     -- Hide empty categories (sidebar-only visual, does not affect grouping)
+    if EUI_CategoryManager._hasHiddenEmptyCategories then
+        local filtered = {}
+        for _, entry in ipairs(displayList) do
+            local cat = cats[entry.catIdx]
+            if not (entry.count == 0 and cat and cat.hideWhenEmpty and not entry.isGroupHeader) then
+                filtered[#filtered + 1] = entry
+            end
+        end
+        displayList = filtered
+    end
     local hideEmpty = BP().bagHideEmptyCategories ~= false
     if hideEmpty then
         local filtered = {}
@@ -1782,7 +1832,9 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
             btn._count:Hide()
         else
             btn._label:Show()
-            btn._label:SetText(entry.name)
+            local cat = cats[entry.catIdx]
+            btn._label:SetText(cat and cat.color and not entry.isGroupHeader
+                and EUI_CategoryManager:DisplayName(cat) or entry.name)
             btn._label:SetTextColor(1, 1, 1, isSelected and 1 or 0.75)
 
             btn._count:Show()
@@ -1857,7 +1909,7 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
                 if not popup then
                     popup = CreateFrame("Frame", nil, EUI_Bags)
                     popup:SetFrameStrata("DIALOG")
-                    popup:SetSize(240, 230)
+                    popup:SetSize(240, 262)
                     popup:EnableMouse(true)
                     local bg = popup:CreateTexture(nil, "BACKGROUND")
                     bg:SetAllPoints()
@@ -2031,6 +2083,19 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
                     end)
                     popup._customEB = customEB
 
+                    local rulesBtn = CreateFrame("Button", nil, popup)
+                    rulesBtn:SetSize(220, 24)
+                    rulesBtn:SetPoint("BOTTOMLEFT", 10, 40)
+                    local rulesLabel = rulesBtn:CreateFontString(nil, "OVERLAY")
+                    SetBagFont(rulesLabel, 12)
+                    rulesLabel:SetPoint("CENTER")
+                    rulesLabel:SetText(EllesmereUI.L("Filters, Color and Visibility"))
+                    rulesBtn:SetScript("OnClick", function(s)
+                        MenuUtil.CreateContextMenu(s, function(_, root)
+                            CustomCategorySettings(root, popup._settings, function() end, s)
+                        end)
+                    end)
+
                     local createBtn = CreateFrame("Button", nil, popup)
                     createBtn:SetSize(220, 26)
                     createBtn:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
@@ -2108,6 +2173,9 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
                             if cats[idx] then
                                 cats[idx].icon = icon
                                 cats[idx].isAtlas = nil
+                                cats[idx].filters = popup._settings.filters
+                                cats[idx].hideWhenEmpty = popup._settings.hideWhenEmpty
+                                cats[idx].color = popup._settings.color
                             end
                             EUI_CategoryManager:SaveState()
                         end
@@ -2129,6 +2197,7 @@ local function BuildSidebarButtons(categoryCounts, totalCount)
                     EUI_Bags._newCatPopup = popup
                 end
                 popup._nameEB:SetText("")
+                popup._settings = {}
                 popup._customEB:SetText("")
                 popup._selectedIcon = popup._iconIDs[1]
                 popup._customMode = false

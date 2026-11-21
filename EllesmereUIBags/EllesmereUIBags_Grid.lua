@@ -1215,11 +1215,14 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
 
         -- Build render sections: ungrouped = individual, grouped = merged under group name
         local renderedGroups = {}
+        local separate = BP().bagSeparateSubcategories == true
         local headerIdx = 0
         local expSubIdx = 0
 
         local function RenderSection(sectionName, sectionItems, isUserCreated, showPinAdd, alwaysShow, assignCatIdx, nestByExpansion, reagentSection)
             local itemCount = #sectionItems
+            local category = assignCatIdx and cats[assignCatIdx]
+            if itemCount == 0 and isUserCreated and category and category.hideWhenEmpty then return end
             if itemCount == 0 and not isUserCreated and not showPinAdd and not alwaysShow then return end
 
             local useSlotNest = armorySlotGrouping
@@ -1237,6 +1240,7 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
 
             -- sectionName is the group's key; this is what the label shows
             local label = EUI_CategoryManager:GroupDisplayName(sectionName)
+            if isUserCreated and category and category.color then label = EUI_CategoryManager:DisplayName(category, label) end
 
             -- Compact: the collector draws this section (EllesmereUIBags_Compact.lua)
             if compactOn then
@@ -1472,6 +1476,21 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
                     if not hiddenSet[cat.groupName] then
                         local members = EUI_CategoryManager:GetGroupMembers(cat.groupName)
                         local merged = {}
+                        if separate then
+                            for _, mi in ipairs(members) do
+                                local member = cats[mi]
+                                RenderSection(cat.groupName .. ": " .. member.name, itemsByCat[mi] or {},
+                                    member.isUserCreated, nil, nil, mi, true, member.isReagentBag)
+                                if member.isSetGear and not member.isEquipSet and BP().bagSplitSetGearBySet then
+                                    for i, childCat in ipairs(cats) do
+                                        if childCat.isEquipSet then
+                                            RenderSection(cat.groupName .. ": " .. childCat.name,
+                                                itemsByCat[i] or {}, false, nil, nil, i, true)
+                                        end
+                                    end
+                                end
+                            end
+                        else
                         for _, mi in ipairs(members) do
                             if itemsByCat[mi] then
                                 for _, data in ipairs(itemsByCat[mi]) do
@@ -1498,6 +1517,7 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
                         if firstOn then
                             RenderSection(cat.groupName, merged, false, nil, nil, firstOn, true)
                         end
+                        end
                     end
                 end
             elseif cat.isEquipSet then
@@ -1506,7 +1526,7 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
                 if not hiddenSet[cat._defaultName] and not EUI_CategoryManager:IsCategoryOff(cat, dc) then
                     local catItems = itemsByCat[ci] or {}
                     -- The Item Set Gear anchor folds in its set children's items
-                    if cat.isSetGear and BP().bagSplitSetGearBySet then
+                    if cat.isSetGear and BP().bagSplitSetGearBySet and not separate then
                         local folded = nil
                         for i, c in ipairs(cats) do
                             if c.isEquipSet and itemsByCat[i] then
@@ -1521,6 +1541,13 @@ function ns.RenderGridView(tempItems, displayItems, emptySlots, child, columns, 
                     end
                     local isUserCreated = cat.isUserCreated
                     RenderSection(cat.name, catItems, isUserCreated, cat.isPinned, cat.isRecent, ci, true, cat.isReagentBag)
+                    if separate and cat.isSetGear and BP().bagSplitSetGearBySet then
+                        for i, childCat in ipairs(cats) do
+                            if childCat.isEquipSet then
+                                RenderSection(cat.name .. ": " .. childCat.name, itemsByCat[i] or {}, false, nil, nil, i, true)
+                            end
+                        end
+                    end
                 end
             end
         end

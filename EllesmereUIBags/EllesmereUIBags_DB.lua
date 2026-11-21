@@ -28,6 +28,7 @@ local BAGS_DEFAULTS = {
         bagHideEmptyCategories = true,
         bagCategorizeReagents = false,
         bagSplitSetGearBySet  = false,
+        bagSeparateSubcategories = false,
         bagShowSetGearName    = false,
         bagSetNameFontSize    = 9,
         bagMergeDuplicates    = true,    -- every display

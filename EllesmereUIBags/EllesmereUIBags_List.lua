@@ -1122,7 +1122,7 @@ function ns.RenderListView(items, opts)
         elseif slotView then
             label, secKey = ns.BagDisplayName(b.key), "bag" .. b.key
             count = "(" .. b.n .. " / " .. C_Container.GetContainerNumSlots(b.key) .. ")"
-        else label, secKey = cats[b.key].name, cats[b.key]._defaultName end
+        else label, secKey = EUI_CategoryManager:DisplayName(cats[b.key]), cats[b.key]._defaultName end
         count = count or ("(" .. b.n .. ")")
         if showValue and b.sell > 0 then count = count .. "  " .. C_CurrencyInfo.GetCoinTextureString(b.sell) end
         local h, collapsed = PlaceSection(secKey, label, count, x, y, rowW, false)

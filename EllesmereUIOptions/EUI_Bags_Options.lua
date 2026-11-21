@@ -285,6 +285,13 @@ initFrame:SetScript("OnEvent", function(self)
             -- Slot Size | Slot Spacing | Auto-Size to Fit (not in List) |
             -- Background Color | Background Opacity | Slot Background, two per row
             local layoutSlots = {
+                { type="toggle", text="Separate Subcategories",
+                  tooltip="In All Items, show grouped categories and equipment sets in separate sections in Grid and Compact.",
+                  getValue=function() return db.profile.bagSeparateSubcategories == true end,
+                  setValue=function(v)
+                      db.profile.bagSeparateSubcategories = v
+                      if _G.EUI_Bags and _G.EUI_Bags.RefreshInventory then _G.EUI_Bags:RefreshInventory() end
+                  end },
                 { type="dropdown", text="Bag Style",
                   values = { grid="Grid", list="List", compact="Compact" },
                   order  = { "grid", "list", "compact" },
