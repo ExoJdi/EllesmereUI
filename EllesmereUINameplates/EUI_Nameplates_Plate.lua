@@ -464,9 +464,9 @@ function NameplateFrame:ApplyAppearance()
     local ctOY = (p and p.castTargetOffsetY) or defaults.castTargetOffsetY
     local tmOX = (p and p.castTimerOffsetX) or defaults.castTimerOffsetX
     local tmOY = (p and p.castTimerOffsetY) or defaults.castTimerOffsetY
-    SetFSFont(self.castName, cns, GetNPOutline())
-    SetFSFont(self.castTarget, cts, GetNPOutline())
-    SetFSFont(self.castTimer, ctmSz, GetNPOutline())
+    SetFSFont(self.castName, cns, GetNPOutline(), "name")
+    SetFSFont(self.castTarget, cts, GetNPOutline(), "name")
+    SetFSFont(self.castTimer, ctmSz, GetNPOutline(), "duration")
     self.castTimer:SetTextColor(ctmC.r, ctmC.g, ctmC.b, 1)
     local showTimer = defaults.showCastTimer
     if p and p.showCastTimer ~= nil then showTimer = p.showCastTimer end
@@ -813,7 +813,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
         if element == "healthPercent" or element == "healthPercentNoSign" then
             local fs = self.hpText
             fs:SetParent(ns.SlotTextHost(self, slot.key, slotStrata))
-            SetFSFont(fs, slotFontSz, GetNPOutline())
+            SetFSFont(fs, slotFontSz, GetNPOutline(), element == "targetOfTarget" and "name" or (element ~= "level" and "health" or nil))
             self:PlaceSlotText(fs, slot, txOff, tyOff)
             fs:SetJustifyH(slot.justify or slot.anchor)
             fs:SetTextColor(sr, sg, sb, 1)
@@ -827,7 +827,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
         elseif element == "healthNumber" then
             local fs = self.hpNumber
             fs:SetParent(ns.SlotTextHost(self, slot.key, slotStrata))
-            SetFSFont(fs, slotFontSz, GetNPOutline())
+            SetFSFont(fs, slotFontSz, GetNPOutline(), element == "targetOfTarget" and "name" or (element ~= "level" and "health" or nil))
             self:PlaceSlotText(fs, slot, txOff, tyOff)
             fs:SetJustifyH(slot.justify or slot.anchor)
             fs:SetTextColor(sr, sg, sb, 1)
@@ -841,7 +841,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
         elseif IsComboHealthText(element) then
             local fs = self.hpText
             fs:SetParent(ns.SlotTextHost(self, slot.key, slotStrata))
-            SetFSFont(fs, slotFontSz, GetNPOutline())
+            SetFSFont(fs, slotFontSz, GetNPOutline(), element == "targetOfTarget" and "name" or (element ~= "level" and "health" or nil))
             self:PlaceSlotText(fs, slot, txOff, tyOff)
             fs:SetJustifyH(slot.justify or slot.anchor)
             fs:SetTextColor(sr, sg, sb, 1)
@@ -860,7 +860,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
             local isLevel = element == "level"
             local fs = isLevel and self.levelText or self:EnsureToTText()
             fs:SetParent(ns.SlotTextHost(self, slot.key, slotStrata))
-            SetFSFont(fs, slotFontSz, GetNPOutline())
+            SetFSFont(fs, slotFontSz, GetNPOutline(), element == "targetOfTarget" and "name" or (element ~= "level" and "health" or nil))
             self:PlaceSlotText(fs, slot, txOff, tyOff)
             fs:SetJustifyH(slot.justify or slot.anchor)
             fs:SetTextColor(sr, sg, sb, 1)
@@ -892,7 +892,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
         else
             fs = self.hpText
         end
-        SetFSFont(fs, topFontSz, GetNPOutline())
+        SetFSFont(fs, topFontSz, GetNPOutline(), topElement == "targetOfTarget" and "name" or (topElement ~= "level" and "health" or nil))
         fs:SetParent(ns.SlotTextHost(self, "textSlotTop", (p and p.textSlotTopStrata) or "MEDIUM"))
         fs:ClearAllPoints()
         PP.Point(fs, "BOTTOM", self.health, "TOP", txOff, 4 + nameYOff + cpPush + tyOff)
@@ -915,7 +915,7 @@ function NameplateFrame:ApplyHealthTextAppearance()
         local tr, tg, tb = GetTextSlotColor("textSlotTop")
         local isLevel = topElement == "level"
         local fs = isLevel and self.levelText or self:EnsureToTText()
-        SetFSFont(fs, topFontSz, GetNPOutline())
+        SetFSFont(fs, topFontSz, GetNPOutline(), topElement == "targetOfTarget" and "name" or (topElement ~= "level" and "health" or nil))
         fs:SetParent(ns.SlotTextHost(self, "textSlotTop", (p and p.textSlotTopStrata) or "MEDIUM"))
         fs:ClearAllPoints()
         PP.Point(fs, "BOTTOM", self.health, "TOP", txOff, 4 + nameYOff + cpPush + tyOff)

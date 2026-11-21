@@ -760,7 +760,7 @@ initFrame:SetScript("OnEvent", function(self)
         if not EllesmereUI._prebuilding then
             local rgn = sizeRow._rightRegion
             local resetFS = rgn:CreateFontString(nil, "OVERLAY")
-            resetFS:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", 12, "")
+            resetFS:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", 12, "")
             resetFS:SetTextColor(1, 1, 1, 0.8)
             resetFS:SetText(EllesmereUI.L("Reset"))
             resetFS:SetPoint("RIGHT", rgn._control, "LEFT", -8, 0)

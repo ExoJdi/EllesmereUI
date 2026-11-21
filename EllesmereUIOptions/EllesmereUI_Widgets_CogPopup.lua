@@ -19,7 +19,7 @@ local PP = EllesmereUI.PanelPP
 local SolidTex = EllesmereUI.SolidTex
 local MakeFont = EllesmereUI.MakeFont
 local MakeDropdownArrow = EllesmereUI.MakeDropdownArrow
-local EXPRESSWAY = EllesmereUI.EXPRESSWAY
+local EXPRESSWAY = EllesmereUI.GetOptionsFontPath()
 local ELLESMERE_GREEN = EllesmereUI.ELLESMERE_GREEN
 local BORDER_COLOR = EllesmereUI.BORDER_COLOR
 local WI = EllesmereUI._widgetInternals
@@ -1169,7 +1169,7 @@ local function BuildCogPopup(opts)
                 -- Menu is FULLSCREEN_DIALOG so it floats above the popup; it
                 -- belongs to the popup (hidden with it, dressed again with it).
                 local MH = 26
-                local FONT = (EllesmereUI.GetFontPath()) or "Fonts\\FRIZQT__.TTF"
+                local FONT = EllesmereUI.GetOptionsFontPath(EllesmereUI.GetFontPath()) or "Fonts\\FRIZQT__.TTF"
                 local menu = PoolOwned(pf, "reorder", "Frame", EllesmereUI.OverlayParent())
                 menu:SetFrameStrata("FULLSCREEN_DIALOG")
                 menu:SetFrameLevel(220)

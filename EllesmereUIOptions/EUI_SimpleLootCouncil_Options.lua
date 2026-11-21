@@ -240,7 +240,7 @@ initFrame:SetScript("OnEvent", function(self)
     local function ChecksWidth(items)
         if not measure then
             measure = UIParent:CreateFontString(nil, "OVERLAY")
-            measure:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", 13, "")
+            measure:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", 13, "")
             measure:Hide()
         end
         local widest = 0
@@ -404,7 +404,7 @@ initFrame:SetScript("OnEvent", function(self)
             addBox:SetHeight(28)
             addBox:SetAutoFocus(false)
             addBox:SetAltArrowKeyMode(false)
-            EllesmereUI.ApplyModuleFont(addBox, EllesmereUI.EXPRESSWAY, 11, nil, "")
+            EllesmereUI.ApplyModuleFont(addBox, EllesmereUI.GetOptionsFontPath(), 11, nil, "")
             addBox:SetTextColor(1, 1, 1, 0.9)
             addBox:SetJustifyH("LEFT")
             addBox:SetTextInsets(10, 10, 0, 0)

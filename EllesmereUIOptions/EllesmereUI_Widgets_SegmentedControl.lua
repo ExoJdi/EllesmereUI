@@ -57,7 +57,7 @@ local function BuildSegmentedControl(cfg)
         tmpFS = UIParent:CreateFontString(nil, "OVERLAY")
         measureFS = tmpFS
     end
-    tmpFS:SetFont(EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF", FONT_SZ, "")
+    tmpFS:SetFont(EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF", FONT_SZ, "")
     local segWidths, textW = {}, {}
     local pillW = 0
     for _, key in ipairs(cfg.keys) do
@@ -278,7 +278,7 @@ local function BuildSegmentedControl(cfg)
         end
 
         local lbl = btn:CreateFontString(nil, "OVERLAY")
-        lbl:SetFont(EllesmereUI.EXPRESSWAY, FONT_SZ, "")
+        lbl:SetFont(EllesmereUI.GetOptionsFontPath(), FONT_SZ, "")
         local lblOfsX = 0
         if i == 1 then lblOfsX = -capW / 2 end
         if i == numKeys then lblOfsX = capW / 2 end

@@ -143,6 +143,7 @@ local function PAB_ApplyExtraText(button, d, style)
     local path = style.fontPath or STANDARD_TEXT_FONT
     local flag = style.fontFlag or "OUTLINE"
     if d.duration then
+        local path = EllesmereUI.ResolveFontRole("unitFrames", "duration", nil, path)
         local fKey = path .. "|" .. (style.durationFontSize or 11) .. "|" .. flag
         if d.pabDurFont ~= fKey then
             d.pabDurFont = fKey
@@ -181,6 +182,7 @@ local function PAB_ApplyExtraText(button, d, style)
         end
     end
     if d.stack then
+        local path = EllesmereUI.ResolveFontRole("unitFrames", "stacks", nil, path)
         local fKey = path .. "|" .. (style.stackFontSize or 11) .. "|" .. flag
         if d.pabStackFont ~= fKey then
             d.pabStackFont = fKey

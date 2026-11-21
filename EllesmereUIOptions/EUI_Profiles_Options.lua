@@ -255,7 +255,7 @@ function _G._EUI_BuildProfilesPage(pageName, parent, yOffset)
     local W = EllesmereUI.Widgets
     local y = yOffset
     local _, h
-    local FONT = EllesmereUI.EXPRESSWAY
+    local FONT = EllesmereUI.GetOptionsFontPath()
     local EG = EllesmereUI.ELLESMERE_GREEN
     local MEDIA = "Interface\\AddOns\\EllesmereUI\\media\\"
 

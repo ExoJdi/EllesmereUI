@@ -18,7 +18,7 @@ local ECME, FC, _ecmeFC, cdmBarFrames = I.ECME, I.FC, I._ecmeFC, I.cdmBarFrames
 --  CDM Bars: Our replacement for Blizzard's Cooldown Manager
 --  Captures Blizzard positions on first login, then creates our own bars.
 -------------------------------------------------------------------------------
-local function GetCDMFont() return EllesmereUI.GetFontPath("cdm") end
+local function GetCDMFont(role) return EllesmereUI.GetFontPath("cdm", role) end
 local function SetBlizzCDMFont(fs, font, size, r, g, b)
     if not (fs and fs.SetFont) then return end
     EllesmereUI.ApplyIconTextFont(fs, font, size, "cdm")

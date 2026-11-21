@@ -44,8 +44,11 @@ local GetShapeshiftFormID = GetShapeshiftFormID
 -------------------------------------------------------------------------------
 --  Constants
 -------------------------------------------------------------------------------
-local function GetRBFont() return EllesmereUI.GetFontPath("resourceBars") end
-local function SetRBFont(fs, font, size) EllesmereUI.ApplyModuleFont(fs, font, size, "resourceBars") end
+local function GetRBFont(role) return EllesmereUI.GetFontPath("resourceBars", role) end
+local function SetRBFont(fs, font, size, role)
+    font = EllesmereUI.ResolveFontRole("resourceBars", role, nil, font)
+    EllesmereUI.ApplyModuleFont(fs, font, size, "resourceBars")
+end
 -- Shared with EUI_ResourceBars_SwingTimer.lua (same font lane as the cast bar text).
 ns.GetRBFont = GetRBFont
 ns.SetRBFont = SetRBFont

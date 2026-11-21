@@ -86,6 +86,7 @@ local function SecondsRoundDown()
 end
 
 local function BuildRuleDurationFormatter(withSecondsUnit, preciseThreshold)
+    if EllesmereUI.GetTimeFormatDB().minutesClock then preciseThreshold = 5400 end
     if not (C_StringUtil and C_StringUtil.CreateNumericRuleFormatter
         and Enum.NumericRuleFormatRounding) then
         return nil
@@ -136,6 +137,7 @@ local function BuildRuleDurationFormatter(withSecondsUnit, preciseThreshold)
             days,
         }
     end
+    EllesmereUI.ApplyDurationFormatRules(points)
     local ok = pcall(formatter.SetBreakpoints, formatter, points)
     if not ok then return nil end
     return formatter
@@ -400,7 +402,7 @@ local function ApplyStyleToRegions(button, style)
     -- access restriction while auras are secret, and unchanged anchors must
     -- make zero button-involving calls so restyles stay live in-instance.
     if d.stack and not style.noDefaultFonts then
-        local f = style.stackFont or STANDARD_TEXT_FONT
+        local f = EllesmereUI.ResolveFontRole(style.moduleKey, "stacks", style.stackFont, STANDARD_TEXT_FONT)
         d.stack:SetFont(f, style.stackFontSize or 12, style.stackFontFlags or "OUTLINE")
         local sp = style.stackPoint or "BOTTOMRIGHT"
         local sKey = sp .. "|" .. (style.stackX or 2) .. "|" .. (style.stackY or -2)
@@ -415,7 +417,7 @@ local function ApplyStyleToRegions(button, style)
 
     if d.duration then
         if not style.noDefaultFonts then
-            local f = style.durationFont or STANDARD_TEXT_FONT
+            local f = EllesmereUI.ResolveFontRole(style.moduleKey, "duration", style.durationFont, STANDARD_TEXT_FONT)
             d.duration:SetFont(f, style.durationFontSize or 11, style.durationFontFlags or "OUTLINE")
             local dp = style.durationPoint or "TOP"
             local drp = style.durationRelPoint or "BOTTOM"

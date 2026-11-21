@@ -54,7 +54,7 @@ function EllesmereUI.ShowTrackedAurasPopup(opts)
     -- The panel's pixel helper, like every popup scaled by GetPopupScale:
     -- the real-UI-scale PP lands 1px borders on fractional pixels here.
     local PP = EllesmereUI.PanelPP or EllesmereUI.PP
-    local fontPath = opts.fontPath or EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+    local fontPath = opts.fontPath or EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
     local ppScale = (EllesmereUI.GetPopupScale()) or 1
     local EG = EllesmereUI.ELLESMERE_GREEN
 
@@ -600,7 +600,7 @@ function EllesmereUI.ShowSpellBlacklistPopup(opts)
         EllesmereUI._blacklistPopup = nil
     end
     opts = opts or {}
-    local fontPath = EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+    local fontPath = EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
     local eg = EllesmereUI.ELLESMERE_GREEN or { r = 0.05, g = 0.82, b = 0.62 }
     local PW, PH = 320, 400
 

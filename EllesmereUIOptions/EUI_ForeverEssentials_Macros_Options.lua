@@ -129,7 +129,7 @@ local function TextBox(parent, w, h)
     boxes[e] = true
     e:SetMultiLine(true)
     e:SetAutoFocus(false)
-    e:SetFont(EllesmereUI.EXPRESSWAY, 12, "")
+    e:SetFont(EllesmereUI.GetOptionsFontPath(), 12, "")
     e:SetTextColor(1, 1, 1, 0.9)
     e:SetSpacing(3)
     e:SetSize(w - 26, 20)
@@ -199,7 +199,7 @@ local function NewCell(parent)
     c.plus:SetPoint("CENTER", 0, 1)
     c.plus:SetText("+")
     c.name = c:CreateFontString(nil, "OVERLAY")
-    c.name:SetFont(EllesmereUI.EXPRESSWAY, 9, "OUTLINE")
+    c.name:SetFont(EllesmereUI.GetOptionsFontPath(), 9, "OUTLINE")
     c.name:SetPoint("BOTTOMLEFT", 2, 3)
     c.name:SetPoint("BOTTOMRIGHT", -2, 3)
     c.name:SetJustifyH("CENTER")
@@ -435,7 +435,7 @@ local function LineHeader(body, y, ctx, i, l)
     local row, h = W:DualRow(body, y, { type = "label", text = LineCode(i, l) })
     local rgn = row._leftRegion
     local label = rgn._label
-    label:SetFont(EllesmereUI.EXPRESSWAY, 13, "")
+    label:SetFont(EllesmereUI.GetOptionsFontPath(), 13, "")
     ctx.headers[#ctx.headers + 1] = { fs = label, i = i, l = l }
     if open then
         local ac = Accent()

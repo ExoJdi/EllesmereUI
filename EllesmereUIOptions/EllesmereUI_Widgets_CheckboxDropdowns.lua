@@ -187,8 +187,8 @@ function EllesmereUI.BuildVisOptsCBDropdown(parentFrame, ddW, fLevel, items, get
     ddBg:SetColorTexture(EllesmereUI.DD_BG_R, EllesmereUI.DD_BG_G, EllesmereUI.DD_BG_B, EllesmereUI.DD_BG_A)
     local ddBrd = EllesmereUI.MakeRoundedBorder(ddBtn, 1, 1, 1, EllesmereUI.DD_BRD_A, ddBg)
     local ddLbl = ddBtn:CreateFontString(nil, "OVERLAY")
-    -- Options panel is Expressway-locked by design (locale-aware: CJK/Cyrillic get the system glyph font). The user's global font intentionally does not restyle the settings UI.
-    local fontPath = EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+    -- The settings window font is independent of the global game font.
+    local fontPath = EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
     ddLbl:SetFont(fontPath, 13, "")
     ddLbl:SetTextColor(1, 1, 1, EllesmereUI.DD_TXT_A)
     ddLbl:SetJustifyH("LEFT")
@@ -1593,8 +1593,8 @@ function EllesmereUI.BuildReorderCBDropdown(parentFrame, ddW, fLevel, items, get
     opts = opts or {}
     local PP = EllesmereUI.PanelPP
     local EG = EllesmereUI.ELLESMERE_GREEN or { r = 0.05, g = 0.82, b = 0.62 }
-    -- Options panel is Expressway-locked by design (locale-aware: CJK/Cyrillic get the system glyph font). The user's global font intentionally does not restyle the settings UI.
-    local fontPath = EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+    -- The settings window font is independent of the global game font.
+    local fontPath = EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
 
     -- Split movable / fixed, preserving the given order
     local movable, fixedItems = {}, {}
@@ -2036,7 +2036,7 @@ function EllesmereUI.BuildSliderDropdown(parentFrame, ddW, fLevel, items, opts)
     if standIn then return standIn, standIn end
     local PP = EllesmereUI.PanelPP
     opts = opts or {}
-    local fontPath = EllesmereUI.EXPRESSWAY
+    local fontPath = EllesmereUI.GetOptionsFontPath()
     local ddBtn = CreateFrame("Button", nil, parentFrame)
     -- This build's dress of the button (see BuildVisOptsCBDropdown).
     local dressGen = PoolGen(ddBtn)

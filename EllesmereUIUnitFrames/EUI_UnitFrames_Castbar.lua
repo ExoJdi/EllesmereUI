@@ -1037,7 +1037,7 @@ local function CreateCastBar(frame, unit, settings)
     textOverlay:SetFrameLevel(frame:GetFrameLevel() + 11)
 
     local text = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(text, settings.castSpellNameSize or 11)
+    SetFSFont(text, settings.castSpellNameSize or 11, nil, "name")
     text:SetJustifyH("LEFT")
     text:SetWordWrap(false)
     text:SetMaxLines(1)
@@ -1045,7 +1045,7 @@ local function CreateCastBar(frame, unit, settings)
     castbar.Text = text
 
     local time = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(time, settings.castDurationSize or 10)
+    SetFSFont(time, settings.castDurationSize or 10, nil, "duration")
     time:SetJustifyH("RIGHT")
     time:SetWordWrap(false)
     time:SetMaxLines(1)
@@ -1053,7 +1053,7 @@ local function CreateCastBar(frame, unit, settings)
     castbar.Time = time
 
     local target = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(target, settings.castSpellTargetSize or 11)
+    SetFSFont(target, settings.castSpellTargetSize or 11, nil, "name")
     target:SetJustifyH("RIGHT")
     target:SetWordWrap(false)
     target:SetMaxLines(1)

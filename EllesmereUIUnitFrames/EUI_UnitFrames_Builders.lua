@@ -297,7 +297,7 @@ local function ApplyFrameTextPositions(frame, unit, s, rcDefault, barWDefault)
     -- truncated past 95% of health bar width (SetWordWrap(false) + capped width below).
     if extraText then
         local ec = s.extraTextContent or "none"
-        SetFSFont(extraText, s.extraTextSize or s.textSize or 12)
+        SetFSFont(extraText, s.extraTextSize or s.textSize or 12, nil, ns.UF_FontRole(ec))
         extraText:ClearAllPoints()
         if ec ~= "none" then
             local exo = s.extraTextX or 0
@@ -320,7 +320,7 @@ local function ApplyFrameTextPositions(frame, unit, s, rcDefault, barWDefault)
     end
 
     -- Each text position renders independently.
-    SetFSFont(centerText, csz)
+    SetFSFont(centerText, csz, nil, ns.UF_FontRole(cc))
     centerText:ClearAllPoints()
     if cc ~= "none" then
         centerText:SetJustifyH("CENTER")
@@ -330,7 +330,7 @@ local function ApplyFrameTextPositions(frame, unit, s, rcDefault, barWDefault)
         ApplyClassColor(centerText, unit, s.centerTextClassColor, s.centerTextColorR, s.centerTextColorG, s.centerTextColorB)
     else centerText:Hide() end
 
-    SetFSFont(leftText, lsz)
+    SetFSFont(leftText, lsz, nil, ns.UF_FontRole(lc))
     leftText:ClearAllPoints()
     if lc ~= "none" then
         leftText:SetJustifyH("LEFT")
@@ -346,7 +346,7 @@ local function ApplyFrameTextPositions(frame, unit, s, rcDefault, barWDefault)
         ApplyClassColor(leftText, unit, s.leftTextClassColor, s.leftTextColorR, s.leftTextColorG, s.leftTextColorB)
     else leftText:Hide() end
 
-    SetFSFont(rightText, rsz)
+    SetFSFont(rightText, rsz, nil, ns.UF_FontRole(rc))
     rightText:ClearAllPoints()
     if rc ~= "none" then
         rightText:SetJustifyH("RIGHT")
@@ -542,19 +542,19 @@ local function StyleFullFrame(frame, unit)
     local ets = settings.extraTextSize or settings.textSize or 12
 
     local leftText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(leftText, lts)
+    SetFSFont(leftText, lts, nil, ns.UF_FontRole(leftContent))
     leftText:SetWordWrap(false)
     leftText:SetTextColor(1, 1, 1)
     frame.LeftText = leftText
 
     local rightText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(rightText, rts)
+    SetFSFont(rightText, rts, nil, ns.UF_FontRole(rightContent))
     rightText:SetWordWrap(false)
     rightText:SetTextColor(1, 1, 1)
     frame.RightText = rightText
 
     local centerText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(centerText, cts)
+    SetFSFont(centerText, cts, nil, ns.UF_FontRole(centerContent))
     centerText:SetWordWrap(false)
     centerText:SetTextColor(1, 1, 1)
     frame.CenterText = centerText
@@ -562,7 +562,7 @@ local function StyleFullFrame(frame, unit)
     -- Extra Text: a 4th text zone, identical to the others (same tags + absorb gate);
     -- anchors per extraTextAlign, capped at 95% of the bar width (ellipsis truncation).
     local extraText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(extraText, ets)
+    SetFSFont(extraText, ets, nil, ns.UF_FontRole(extraContent))
     extraText:SetWordWrap(false)
     extraText:SetTextColor(1, 1, 1)
     frame.ExtraText = extraText
@@ -717,19 +717,19 @@ local function StyleFocusFrame(frame, unit)
     local ets = settings.extraTextSize or settings.textSize or 12
 
     local leftText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(leftText, lts)
+    SetFSFont(leftText, lts, nil, ns.UF_FontRole(leftContent))
     leftText:SetWordWrap(false)
     leftText:SetTextColor(1, 1, 1)
     frame.LeftText = leftText
 
     local rightText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(rightText, rts)
+    SetFSFont(rightText, rts, nil, ns.UF_FontRole(rightContent))
     rightText:SetWordWrap(false)
     rightText:SetTextColor(1, 1, 1)
     frame.RightText = rightText
 
     local centerText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(centerText, cts)
+    SetFSFont(centerText, cts, nil, ns.UF_FontRole(centerContent))
     centerText:SetWordWrap(false)
     centerText:SetTextColor(1, 1, 1)
     frame.CenterText = centerText
@@ -737,7 +737,7 @@ local function StyleFocusFrame(frame, unit)
     -- Extra Text: a 4th text zone, identical to the others (same tags + absorb gate);
     -- anchors per extraTextAlign, capped at 95% of the bar width (ellipsis truncation).
     local extraText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(extraText, ets)
+    SetFSFont(extraText, ets, nil, ns.UF_FontRole(extraContent))
     extraText:SetWordWrap(false)
     extraText:SetTextColor(1, 1, 1)
     frame.ExtraText = extraText
@@ -886,19 +886,19 @@ local function StyleSimpleFrame(frame, unit)
     local centerContent = settings.centerTextContent or "none"
 
     local leftText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(leftText, settings.leftTextSize or settings.textSize or 12)
+    SetFSFont(leftText, settings.leftTextSize or settings.textSize or 12, nil, ns.UF_FontRole(leftContent))
     leftText:SetWordWrap(false)
     leftText:SetTextColor(1, 1, 1)
     frame.LeftText = leftText
 
     local rightText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(rightText, settings.rightTextSize or settings.textSize or 12)
+    SetFSFont(rightText, settings.rightTextSize or settings.textSize or 12, nil, ns.UF_FontRole(rightContent))
     rightText:SetWordWrap(false)
     rightText:SetTextColor(1, 1, 1)
     frame.RightText = rightText
 
     local centerText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(centerText, settings.centerTextSize or settings.textSize or 12)
+    SetFSFont(centerText, settings.centerTextSize or settings.textSize or 12, nil, ns.UF_FontRole(centerContent))
     centerText:SetWordWrap(false)
     centerText:SetTextColor(1, 1, 1)
     frame.CenterText = centerText
@@ -1025,19 +1025,19 @@ local function StyleBossFrame(frame, unit)
     local extraContent = settings.extraTextContent or "none"
 
     local leftText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(leftText, settings.leftTextSize or settings.textSize or 12)
+    SetFSFont(leftText, settings.leftTextSize or settings.textSize or 12, nil, ns.UF_FontRole(leftContent))
     leftText:SetWordWrap(false)
     leftText:SetTextColor(1, 1, 1)
     frame.LeftText = leftText
 
     local rightText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(rightText, settings.rightTextSize or settings.textSize or 12)
+    SetFSFont(rightText, settings.rightTextSize or settings.textSize or 12, nil, ns.UF_FontRole(rightContent))
     rightText:SetWordWrap(false)
     rightText:SetTextColor(1, 1, 1)
     frame.RightText = rightText
 
     local centerText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(centerText, settings.centerTextSize or settings.textSize or 12)
+    SetFSFont(centerText, settings.centerTextSize or settings.textSize or 12, nil, ns.UF_FontRole(centerContent))
     centerText:SetWordWrap(false)
     centerText:SetTextColor(1, 1, 1)
     frame.CenterText = centerText
@@ -1046,7 +1046,7 @@ local function StyleBossFrame(frame, unit)
     -- gate); it only anchors per extraTextAlign and is capped at 95% of the bar
     -- width (ellipsis truncation). Mirrors the Main Frames implementation.
     local extraText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(extraText, settings.extraTextSize or settings.textSize or 12)
+    SetFSFont(extraText, settings.extraTextSize or settings.textSize or 12, nil, ns.UF_FontRole(extraContent))
     extraText:SetWordWrap(false)
     extraText:SetTextColor(1, 1, 1)
     frame.ExtraText = extraText

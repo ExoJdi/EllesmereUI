@@ -137,12 +137,14 @@ function _AC.DurationFormatter()
     -- Thresholds sit ON each unit boundary: a floored value never crosses one,
     -- so none of the "just above the boundary" offsets the up-rounding
     -- formatters need apply here.
-    local ok = pcall(f.SetBreakpoints, f, {
+    local points = {
         { threshold = 0,     format = "%d",  step = 1, rounding = Down },
         { threshold = 60,    format = "%dm", step = 1, rounding = Down, components = { { div = 60 } } },
         { threshold = 3600,  format = "%dh", step = 1, rounding = Down, components = { { div = 3600 } } },
         { threshold = 86400, format = "%dd", step = 1, rounding = Down, components = { { div = 86400 } } },
-    })
+    }
+    EllesmereUI.ApplyDurationFormatRules(points)
+    local ok = pcall(f.SetBreakpoints, f, points)
     if not ok then return nil end
     _AC.durFmt = f
     return f
@@ -498,10 +500,11 @@ function _AC.ApplyExtra(button, d, style)
     end
 
     if d.duration then
-        local fKey = c.font .. "|" .. c.durSize
+        local font = EllesmereUI.ResolveFontRole("cdm", "duration", nil, c.font)
+        local fKey = font .. "|" .. c.durSize
         if d.cdmDurFont ~= fKey then
             d.cdmDurFont = fKey
-            EllesmereUI.ApplyIconTextFont(d.duration, c.font, c.durSize, "cdm")
+            EllesmereUI.ApplyIconTextFont(d.duration, font, c.durSize, "cdm")
         end
         local aKey = c.durPos .. "|" .. c.durX .. "|" .. c.durY
         if d.cdmDurAnchor ~= aKey then
@@ -512,10 +515,11 @@ function _AC.ApplyExtra(button, d, style)
     end
 
     if d.stack then
-        local fKey = c.font .. "|" .. c.stackSize
+        local font = EllesmereUI.ResolveFontRole("cdm", "stacks", nil, c.font)
+        local fKey = font .. "|" .. c.stackSize
         if d.cdmStackFont ~= fKey then
             d.cdmStackFont = fKey
-            EllesmereUI.ApplyIconTextFont(d.stack, c.font, c.stackSize, "cdm")
+            EllesmereUI.ApplyIconTextFont(d.stack, font, c.stackSize, "cdm")
         end
         local aKey = c.stackPos .. "|" .. c.stackX .. "|" .. c.stackY
         if d.cdmStackAnchor ~= aKey then

@@ -488,7 +488,7 @@ local function BuildBars()
         healthBar._text:ClearAllPoints()
         local _hpTA = hp.textAnchor or "CENTER"
         healthBar._text:SetPoint(_hpTA, healthBar, _hpTA, hp.textXOffset, hp.textYOffset)
-        SetRBFont(healthBar._text, GetRBFont(), hp.textSize)
+        SetRBFont(healthBar._text, GetRBFont(), hp.textSize, "health")
         -- Text color: class color when textCustomColored == false, else custom (default custom)
         if hp.textCustomColored == false then
             local tcc = CLASS_COLORS[cachedClass]
@@ -1028,7 +1028,7 @@ local function BuildBars()
                 local cdText = runeFrames[i]._cdText
                 if cdText then
                     cdText:SetTextColor(sp.textR or 1, sp.textG or 1, sp.textB or 1, 0.8)
-                    SetRBFont(cdText, GetRBFont(), sp.textSize or 9)
+                    SetRBFont(cdText, GetRBFont(), sp.textSize or 9, "duration")
                     cdText:ClearAllPoints()
                     cdText:SetPoint("CENTER", runeFrames[i], "CENTER",
                         sp.textXOffset or 0, sp.textYOffset or 0)
@@ -1335,7 +1335,7 @@ local function BuildBars()
             secondaryFrame._countText:SetParent(secondaryFrame._countTextOverlay)
             local _spTA = sp.textAnchor or "CENTER"
             secondaryFrame._countText:SetPoint(_spTA, secondaryFrame, _spTA, sp.textXOffset, sp.textYOffset)
-            SetRBFont(secondaryFrame._countText, GetRBFont(), sp.textSize)
+            SetRBFont(secondaryFrame._countText, GetRBFont(), sp.textSize, "stacks")
             -- "Hide at Zero": both writers of the count text are wrapped while the
             -- option is on (pip resources use SetText, the power bars
             -- SetFormattedText). A secret bare count goes through TruncateWhenZero;

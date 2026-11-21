@@ -18,7 +18,7 @@ local UnitIsUnit = UnitIsUnit
 -- preview's next build. A plate's parent is no pool host: a plain CreateFrame.
 local Pool = EllesmereUI._Pool
 
-local function GetFont() return EllesmereUI.GetFontPath("nameplates") end
+local function GetFont(role) return EllesmereUI.GetFontPath("nameplates", role) end
 -- Slug-gated at the source (GetFontOutlineFlag); SetFSFont gates the
 -- explicit-flag path too, so aura literals are covered.
 local function GetNPOutline() return EllesmereUI.GetFontOutlineFlag("nameplates") end
@@ -27,10 +27,10 @@ local function GetNPUseShadow() return EllesmereUI.GetFontUseShadow("nameplates"
 -- other players' writing): the chosen font draws what it can, Blizzard's Cyrillic,
 -- Korean and Chinese faces the rest. Once a string has its family, every later font
 -- write to it goes through this helper (or SetFontFamily), never a plain SetFont.
-local function SetFSFont(fs, size, flags)
+local function SetFSFont(fs, size, flags, role)
   -- "Never Show Slug": gates the explicit-flag path so hardcoded aura
   -- "OUTLINE, SLUG" literals drop the slug (body text is gated at the source).
-  EllesmereUI.ApplyModuleFontFamily(fs, nil, size or 11, "nameplates", EllesmereUI.SlugFlag(flags or GetNPOutline()))
+  EllesmereUI.ApplyModuleFontFamily(fs, nil, size or 11, "nameplates", EllesmereUI.SlugFlag(flags or GetNPOutline()), role)
 end
 
 ns.GetFont = GetFont

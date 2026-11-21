@@ -1176,7 +1176,7 @@ local function BuildCursorAnchorRow(opts)
     -- "(Applies on Window Close)" subtitle
     do
         local suffix = row._leftRegion:CreateFontString(nil, "OVERLAY")
-        suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+        suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
         suffix:SetTextColor(1, 1, 1, 0.35)
         suffix:SetText(EllesmereUI.L("(Applies on Window Close)"))
         local anchorLabel

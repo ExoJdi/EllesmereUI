@@ -266,7 +266,7 @@ local function Place(d, s, e, fs)
     local fw = d._txW or s.frameWidth or 72
     local carrier = CarrierOf(d, s, e)
     if fs._cr ~= carrier then fs:SetParent(carrier); fs._cr = carrier end
-    ApplyFont(fs, s[k.Size] or 10)
+    ApplyFont(fs, s[k.Size] or 10, e.kind == "name" and "name" or ((e.kind == "hp" or e.kind == "ha") and "health" or nil))
     fs:SetWordWrap(P.wrap and not fb)
     fs._r = nil
     if e.kind == "name" and g then
@@ -328,7 +328,10 @@ function ns.RF_TextFonts(d, s)
     local p = d._txL
     if not p then return end
     local all, pool = p.all, d._tx
-    for j = 1, #all do ApplyFont(pool[all[j].i], s[all[j].k.Size] or 10) end
+    for j = 1, #all do
+        local e = all[j]
+        ApplyFont(pool[e.i], s[e.k.Size] or 10, e.kind == "name" and "name" or ((e.kind == "hp" or e.kind == "ha") and "health" or nil))
+    end
 end
 
 -- Stamps the button's plan and settings for the event paths; lays out first when

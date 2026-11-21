@@ -36,11 +36,11 @@ local _ftExpanded = {}
 -- Reload popup for font changes; same funnel contract as the module pages:
 -- the resolution cache must drop even when the user picks Later, because the
 -- new value is already live in the DB.
-local function FontReload()
+local function FontReload(message)
     EllesmereUI.InvalidateFontCache()
     EllesmereUI:ShowConfirmPopup({
         title       = "Reload Required",
-        message     = "Font changed. A UI reload is needed to apply the new font.",
+        message     = message or "Font changed. A UI reload is needed to apply the new font.",
         confirmText = "Reload Now",
         cancelText  = "Later",
         reload      = true,
@@ -316,8 +316,6 @@ end
 
 local function TileCooldownManager(parent, y, W, tile)
     local ns = NS(tile.folder)
-    local _, h = W:DualRow(parent, y, ModuleOutlineCfg(tile.folder, tile.display), BLANK())
-    y = y - h
     if ns then
         y = LinkRow(parent, y, "Icon Duration, Stack & Keybind Text (per bar)",
             tile.folder, "CDM Bars", "ICON DISPLAY", "Duration Size")
@@ -1167,6 +1165,55 @@ local TILE_BUILDERS = {
     EllesmereUISimpleLootCouncil = { TileFontOnly,         "Font face and outline only" },
 }
 
+local function BuildRoleRows(parent, y, W, folder, roles, lastControl)
+    local values, order = EllesmereUI.BuildFontDropdownData()
+    values.__global = { text = "Use module/global font" }
+    local function Config(role)
+        return { type="dropdown", text=role .. " Font", values=values, order=order,
+            tooltip="Explicit local fonts take priority, then module role, global role, and module/global font. Requires a UI reload.",
+            getValue=function()
+                local db = EllesmereUI.GetFontsDB()
+                local t = folder and db.moduleRoles and db.moduleRoles[folder] or (not folder and db.roles)
+                return t and t[role:lower()] or "__global"
+            end,
+            setValue=function(v)
+                local db = EllesmereUI.GetFontsDB()
+                local t
+                if folder then
+                    db.moduleRoles = db.moduleRoles or {}
+                    db.moduleRoles[folder] = db.moduleRoles[folder] or {}
+                    t = db.moduleRoles[folder]
+                else
+                    db.roles = db.roles or {}
+                    t = db.roles
+                end
+                t[role:lower()] = v ~= "__global" and v or nil
+                if not next(t) then
+                    if folder then
+                        db.moduleRoles[folder] = nil
+                        if not next(db.moduleRoles) then db.moduleRoles = nil end
+                    else
+                        db.roles = nil
+                    end
+                end
+                FontReload()
+            end }
+    end
+    for i = 1, #roles, 2 do
+        local _, h = W:DualRow(parent, y, Config(roles[i]), roles[i + 1] and Config(roles[i + 1]) or lastControl or BLANK())
+        y = y - h
+    end
+    return y
+end
+
+local ROLE_MODULES = {
+    EllesmereUICooldownManager = { "Duration", "Stacks", "Name" },
+    EllesmereUIUnitFrames = { "Duration", "Stacks", "Name", "Health" },
+    EllesmereUIRaidFrames = { "Duration", "Stacks", "Name", "Health" },
+    EllesmereUINameplates = { "Duration", "Stacks", "Name", "Health" },
+    EllesmereUIResourceBars = { "Duration", "Stacks", "Name", "Health" },
+}
+
 local function BuildTileList()
     local tiles = {}
     local roster = EllesmereUI.ADDON_ROSTER or {}
@@ -1175,7 +1222,14 @@ local function BuildTileList()
         if def then
             tiles[#tiles + 1] = {
                 key = entry.folder, folder = entry.folder, display = entry.display,
-                desc = def[2], buildContent = def[1], hasFontDD = true,
+                desc = def[2], buildContent = function(parent, y, W, tile)
+                    if ROLE_MODULES[tile.folder] then
+                        local roles = ROLE_MODULES[tile.folder]
+                        y = BuildRoleRows(parent, y, W, tile.folder, roles,
+                            #roles % 2 == 1 and ModuleOutlineCfg(tile.folder, tile.display) or nil)
+                    end
+                    return def[1](parent, y, W, tile)
+                end, hasFontDD = true,
             }
         end
     end
@@ -1298,7 +1352,8 @@ function _G._EUI_BuildFontsPage(pageName, parent, yOffset)
     -------------------------------------------------------------------
     --  GLOBAL FONT section (moved from the old Fonts & Colors page)
     -------------------------------------------------------------------
-    _, h = W:SectionHeader(parent, "GLOBAL FONT", y);  y = y - h
+    _, h = W:SectionHeader(parent, "GLOBAL FONT & TIME FORMAT", y);  y = y - h
+    y = BuildRoleRows(parent, y, W, nil, { "Duration", "Stacks", "Name", "Health" })
 
     -- Glyph-restricted locales (CJK, Cyrillic): most bundled fonts are Latin-only and cannot render the script, so the picker
     -- offers "System Default" plus external SharedMedia fonts (which may carry the right glyphs).
@@ -1365,6 +1420,55 @@ function _G._EUI_BuildFontsPage(pageName, parent, yOffset)
         end
         EllesmereUI.AppendSharedMediaFonts(fontDropValues, fontDropOrder, { keyByName = true })
     end
+
+    local optionsValues = { __default = "Default" }
+    local optionsOrder = { "__default", "---" }
+    for key, value in pairs(fontDropValues) do optionsValues[key] = value end
+    for _, key in ipairs(fontDropOrder) do optionsOrder[#optionsOrder + 1] = key end
+    local function TimeToggle(label, key)
+        return { type="toggle", text=label,
+            getValue=function() return EllesmereUI.GetTimeFormatDB()[key] == true end,
+            setValue=function(v)
+                EllesmereUI.GetTimeFormatDB()[key] = v and true or false
+                FontReload("Time format changed. A UI reload is needed to apply it to all timers.")
+            end }
+    end
+    _, h = W:DualRow(parent, y,
+        TimeToggle("Minutes as M:SS", "minutesClock"),
+        TimeToggle("Hours as H:MM", "hoursClock")); y = y - h
+    _, h = W:DualRow(parent, y,
+        { type="dropdown", text="Settings Window Font",
+          tooltip="Font used by the settings window. Default uses Expressway or the locale fallback. Requires a UI reload.",
+          values=optionsValues, order=optionsOrder,
+          getValue=function() return EllesmereUI.GetFontsDB().optionsFont or "__default" end,
+          setValue=function(v)
+              EllesmereUI.GetFontsDB().optionsFont = v ~= "__default" and v or nil
+              FontReload()
+          end },
+        { type="dropdown", text="Time Unit Color",
+          tooltip="Colors m, h and d suffixes on readable duration text. Engine-managed secret timers keep their existing colors. Requires a UI reload.",
+          values={ default="Default", accent="Accent", custom="Custom" },
+          order={ "default", "accent", "custom" },
+          getValue=function() return EllesmereUI.GetTimeFormatDB().unitColor or "default" end,
+          setValue=function(v)
+              EllesmereUI.GetTimeFormatDB().unitColor = v
+              FontReload("Time format changed. A UI reload is needed to apply it to all timers.")
+          end }); y = y - h
+    local function UnitColor(label, unit)
+        return { type="colorpicker", text=label, hasAlpha=false,
+            getValue=function()
+                local c = EllesmereUI.GetTimeFormatDB()[unit]
+                if c then return c.r, c.g, c.b end
+                return 1, 1, 1
+            end,
+            setValue=function(r, g, b)
+                EllesmereUI.GetTimeFormatDB()[unit] = { r=r, g=g, b=b }
+            end }
+    end
+    _, h = W:DualRow(parent, y, UnitColor("Minute Unit Color", "m"), UnitColor("Hour Unit Color", "h")); y = y - h
+    _, h = W:DualRow(parent, y, UnitColor("Day Unit Color", "d"), BLANK()); y = y - h
+
+    _, h = W:SectionHeader(parent, "GLOBAL FONT", y); y = y - h
 
     local outlineModeValues = {
         ["none"]    = { text = "Drop Shadow" },

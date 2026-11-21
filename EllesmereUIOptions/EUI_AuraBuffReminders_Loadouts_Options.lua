@@ -618,7 +618,7 @@ function ns._BuildLoadoutPage(_, parent, yOffset)
     PP.Size(addFrame, parent:GetWidth() or 400, 38)
     PP.Point(addFrame, "TOPLEFT", parent, "TOPLEFT", 0, y)
     local eg = EllesmereUI.ELLESMERE_GREEN
-    local addBtn = EllesmereUI.MakeActionButton(addFrame, EllesmereUI.EXPRESSWAY, EllesmereUI.L("Add Loadout"),
+    local addBtn = EllesmereUI.MakeActionButton(addFrame, EllesmereUI.GetOptionsFontPath(), EllesmereUI.L("Add Loadout"),
         eg.r, eg.g, eg.b, { w = 160 })
     PP.Point(addBtn, "CENTER", addFrame, "CENTER", 0, 0)
     local onEnter, onLeave = addBtn:GetScript("OnEnter"), addBtn:GetScript("OnLeave")
@@ -663,7 +663,7 @@ function ns._BuildLoadoutPage(_, parent, yOffset)
     _, h = W:Spacer(parent, y, 15); y = y - h
     _, h = W:SectionHeader(parent, "LOADOUTS", y); y = y - h
 
-    local fontPath = EllesmereUI.GetFontPath("auraBuff") or EllesmereUI.EXPRESSWAY
+    local fontPath = EllesmereUI.GetOptionsFontPath(EllesmereUI.GetFontPath("auraBuff"))
     local outline = EllesmereUI.GetFontOutlineFlag("auraBuff")
     local ROW_H, SIDE_PAD = 50, 20
 

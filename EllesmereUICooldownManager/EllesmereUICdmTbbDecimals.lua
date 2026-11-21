@@ -90,6 +90,7 @@ local function GetDecimalFormatter(thr)
         components = { { div = 3600 } } }
     points[#points + 1] = { threshold = 86399.0001, format = "%dd", rounding = Up, step = 1,
         components = { { div = 86400 } } }
+    EllesmereUI.ApplyDurationFormatRules(points)
     local ok = pcall(f.SetBreakpoints, f, points)
     if not ok then
         formatterByThr[thr] = false
@@ -294,7 +295,7 @@ local function BuildContainer(desired)
                 local carrier = CreateFrame("Frame", nil, button)
                 carrier:SetAllPoints(button)
                 local fs = carrier:CreateFontString(nil, "OVERLAY")
-                fs:SetFont((ns.GetCDMFont and ns.GetCDMFont())
+                fs:SetFont((ns.GetCDMFont and ns.GetCDMFont("duration"))
                     or "Interface\\AddOns\\EllesmereUI\\media\\fonts\\Expressway.TTF", 12, "")
                 fs:SetPoint("CENTER", button, "CENTER", 0, 0)
                 -- 68914 schema: updateInterval is a binding-level knob now,
@@ -374,4 +375,3 @@ function ns.TBBDecimals_Sync()
     BuildContainer(desired)
     signature = container and sig or nil
 end
-

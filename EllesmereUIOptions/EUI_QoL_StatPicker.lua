@@ -147,7 +147,7 @@ local function Build()
         end
     end
 
-    local done = EllesmereUI.MakeActionButton(panel, EllesmereUI.EXPRESSWAY,
+    local done = EllesmereUI.MakeActionButton(panel, EllesmereUI.GetOptionsFontPath(),
         EllesmereUI.L("Done"), EG.r, EG.g, EG.b, { w = 200 })
     done:SetPoint("BOTTOM", panel, "BOTTOM", 0, 16)
     done:SetScript("OnClick", function() panel:Hide() end)

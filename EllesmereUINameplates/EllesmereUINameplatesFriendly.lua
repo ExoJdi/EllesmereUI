@@ -222,7 +222,7 @@ end
 -- line in turn -- so the family is set per paint (SetFontFamily is memoized on
 -- the FontObject, so a repeat is cheap).
 local function SetPlateSubTextFont(fs, size)
-    EllesmereUI.SetFontFamily(fs, GetFont(), size, (EllesmereUI.SlugFlag("OUTLINE, SLUG")) or "OUTLINE, SLUG", false)
+    EllesmereUI.SetFontFamily(fs, GetFont("name"), size, (EllesmereUI.SlugFlag("OUTLINE, SLUG")) or "OUTLINE, SLUG", false)
 end
 
 -- The guild sub texts (full-plate subText1) take one font family for the
@@ -233,7 +233,7 @@ end
 local subTexts = {}   -- every built subText1, in build order (pooled plates are never freed)
 local _sfFile, _sfSize, _sfFlags
 local function ApplySubtitleFont()
-    local file = GetFont()
+    local file = GetFont("name")
     local size = GetSubTextSize()
     local flags = (EllesmereUI.SlugFlag("OUTLINE, SLUG")) or "OUTLINE, SLUG"
     if file == _sfFile and size == _sfSize and flags == _sfFlags then return end
@@ -246,7 +246,7 @@ end
 local _ffFile, _ffSize
 local function ApplyFriendlyFontOverride(force)
     SaveOriginalFonts()
-    local font = GetFont()
+    local font = GetFont("name")
     local size = GetFriendlyNameSize()
     -- Blizzard never rewrites the shared font OBJECTS (its plate setup only
     -- SetFontObjects the name strings onto them), so once they carry our
@@ -469,7 +469,7 @@ local function AcquireOverlay()
     overlay = CreateFrame("Frame", nil, UIParent)
     overlay:SetSize(1, 1)
     overlay.name = overlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(overlay.name, 9, "")
+    SetFSFont(overlay.name, 9, "", "name")
     overlay.name:SetPoint("CENTER", overlay, "CENTER", 0, 0)
     -- The shadow rides the font family SetFSFont gives it (a font object).
     if overlay.name.SetSnapToPixelGrid then
@@ -480,7 +480,7 @@ local function AcquireOverlay()
     end
     -- Title FontString (below name)
     overlay.title = overlay:CreateFontString(nil, "OVERLAY")
-    SetFSFont(overlay.title, 9, "")
+    SetFSFont(overlay.title, 9, "", "name")
     overlay.title:SetPoint("TOP", overlay.name, "BOTTOM", 0, -1)
     -- The shadow rides the font family SetFSFont gives it (a font object).
     if overlay.title.SetSnapToPixelGrid then
@@ -573,7 +573,7 @@ end
 local function ApplyOverlayStyle(overlay, unit)
     -- The user's own nameplate outline choice, as the plates that Blizzard and
     -- EUI draw take it; the overlay is no place to force one.
-    local font, outline, shadow = GetFont(), ns.GetNPOutline(), GetNPUseShadow()
+    local font, outline, shadow = GetFont("name"), ns.GetNPOutline(), GetNPUseShadow()
     EllesmereUI.SetFontFamily(overlay.name, font, GetOverlayNameSize(overlay), outline, shadow)
     local nr, ng, nb = ns.Allied.GetNameColor(unit)
     overlay.name:SetTextColor(nr, ng, nb)
@@ -1408,7 +1408,7 @@ local function WriteNameOnlySub(nameFS, unit, guild)
         return
     end
     local fs = NameOnlySub(nameFS)
-    EllesmereUI.SetFontFamily(fs, GetFont(), GetSubTextSize(),
+    EllesmereUI.SetFontFamily(fs, GetFont("name"), GetSubTextSize(),
         (EllesmereUI.SlugFlag("OUTLINE, SLUG")) or "OUTLINE, SLUG", GetNPUseShadow())
     local r, g, b = GetSubTextColor(unit)
     local fp = FP()
@@ -2120,7 +2120,7 @@ local friendlyFrameCache = CreateFramePool("Frame", UIParent, nil, nil, false, f
 
     plate.hpText = plate.health:CreateFontString(nil, "OVERLAY")
     -- Forced crisp outline; SetFSFont applies the global "Never Show Slug" gate.
-    SetFSFont(plate.hpText, 10, "OUTLINE, SLUG")
+    SetFSFont(plate.hpText, 10, "OUTLINE, SLUG", "health")
     SyncHealthTextSide(plate)
     -- Blizzard Style: above the deselected overlay / ring (OVERLAY 4/5).
     if ns.NP_Style and ns.NP_Style() == "blizzard" then plate.hpText:SetDrawLayer("OVERLAY", 7) end
@@ -2135,7 +2135,7 @@ local friendlyFrameCache = CreateFramePool("Frame", UIParent, nil, nil, false, f
     plate.highlight:Hide()
 
     plate.name = plate:CreateFontString(nil, "OVERLAY")
-    SetFSFont(plate.name, GetFriendlyNameTextSize(), "OUTLINE, SLUG")
+    SetFSFont(plate.name, GetFriendlyNameTextSize(), "OUTLINE, SLUG", "name")
     plate.name:SetPoint("BOTTOM", plate.health, "TOP", 0, 4)
     plate.name:SetWordWrap(false)
     plate.name:SetMaxLines(1)
@@ -2734,7 +2734,7 @@ end
 function ns.RefreshFriendlyNameTextSize()
     local size = GetFriendlyNameTextSize()
     for _, plate in pairs(friendlyPlates) do
-        if plate.name then SetFSFont(plate.name, size, "OUTLINE, SLUG") end
+        if plate.name then SetFSFont(plate.name, size, "OUTLINE, SLUG", "name") end
     end
 end
 

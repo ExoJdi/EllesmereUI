@@ -821,7 +821,7 @@ initFrame:SetScript("OnEvent", function(self)
         for _, rgn in ipairs({threshRow._leftRegion, threshRow._rightRegion}) do
             local labelText = rgn == threshRow._leftRegion and leftLabel or rightLabel
             local suffix = rgn:CreateFontString(nil, "OVERLAY")
-            suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+            suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
             suffix:SetTextColor(1, 1, 1, 0.35)
             local found
             local regions = { rgn:GetRegions() }

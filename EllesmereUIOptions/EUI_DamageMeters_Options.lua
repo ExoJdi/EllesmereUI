@@ -353,7 +353,7 @@ initFrame:SetScript("OnEvent", function(self)
         do
             local rgn = visRow._rightRegion
             local suffix = rgn:CreateFontString(nil, "OVERLAY")
-            suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+            suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
             suffix:SetTextColor(1, 1, 1, 0.35)
             local rrLabel
             -- An idle pooled region keeps its last build's text: skip it.
@@ -1184,7 +1184,7 @@ initFrame:SetScript("OnEvent", function(self)
         do
             local rgn = hnRow._rightRegion
             local suffix = rgn:CreateFontString(nil, "OVERLAY")
-            suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+            suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
             suffix:SetTextColor(1, 1, 1, 0.35)
             local hnLabel
             -- An idle pooled region keeps its last build's text: skip it.

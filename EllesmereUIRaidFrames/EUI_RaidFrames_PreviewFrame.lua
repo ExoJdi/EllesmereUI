@@ -520,7 +520,7 @@ local function CreatePreviewFrame(index, party)
     tnbBg:SetAllPoints()
     if PP then PP.DisablePixelSnap(tnbBg) end
     local tnbText = tnb:CreateFontString(nil, "OVERLAY")
-    ApplyFont(tnbText, s.topNameBarTextSize or 11)
+    ApplyFont(tnbText, s.topNameBarTextSize or 11, "name")
     tnbText:SetWordWrap(false)
     tnb:Hide()
 

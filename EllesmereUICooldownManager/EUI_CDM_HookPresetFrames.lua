@@ -697,7 +697,7 @@ local function GetOrCreateItemPresetFrame(barKey, itemID)
     f.cooldownID = nil; f.cooldownInfo = nil
     f.layoutIndex = 99999
     local countFS = f:CreateFontString(nil, "OVERLAY")
-    EllesmereUI.ApplyIconTextFont(countFS, GetCDMFont(), 11, "cdm")
+    EllesmereUI.ApplyIconTextFont(countFS, GetCDMFont("stacks"), 11, "cdm")
     countFS:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 2)
     f._itemCountText = countFS
     f:SetScript("OnEnter", function(self)

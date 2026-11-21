@@ -1105,7 +1105,7 @@ end
 --  pin a string's face for good, so every font write to these strings goes
 --  through here.
 -------------------------------------------------------------------------------
-local function ApplyFont(fs, size) EllesmereUI.ApplyModuleFontFamily(fs, nil, size, "raidFrames") end
+local function ApplyFont(fs, size, role) EllesmereUI.ApplyModuleFontFamily(fs, nil, size, "raidFrames", nil, role) end
 
 -------------------------------------------------------------------------------
 --  Health bar texture helpers

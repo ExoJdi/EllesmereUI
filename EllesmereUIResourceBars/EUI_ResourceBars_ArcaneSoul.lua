@@ -148,7 +148,7 @@ local function GetASFont()
         local path = EllesmereUI.ResolveFontName(key)
         if path then return path end
     end
-    return (EllesmereUI.GetFontPath("resourceBars"))
+    return (EllesmereUI.GetFontPath("resourceBars", "duration"))
         or STANDARD_TEXT_FONT
 end
 

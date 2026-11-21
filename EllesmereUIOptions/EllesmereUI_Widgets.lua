@@ -33,7 +33,7 @@ local RegisterWidgetRefresh = EllesmereUI.RegisterWidgetRefresh
 local RegAccent        = EllesmereUI.RegAccent
 
 -- Visual constants (used in hot paths)
-local EXPRESSWAY       = EllesmereUI.EXPRESSWAY
+local EXPRESSWAY       = EllesmereUI.GetOptionsFontPath()
 local ELLESMERE_GREEN  = EllesmereUI.ELLESMERE_GREEN
 local CONTENT_PAD      = EllesmereUI.CONTENT_PAD
 local DARK_BG          = EllesmereUI.DARK_BG
@@ -546,8 +546,8 @@ local function BuildDropdownMenu(ddBtn, menuW, order, values, getValue, setValue
     menu._ddBrd = MakeRoundedBorder(menu, mBrR, mBrG, mBrB, mBrA, menuBg, nil, true)
 
     if _moSearchable then
-        -- Options panel is Expressway-locked by design; EllesmereUI.EXPRESSWAY is locale-aware (CJK/Cyrillic get the system glyph font). The user's global font intentionally never restyles the settings UI.
-        local fontPath = (_moLabelFont and _moLabelFont[1]) or EllesmereUI.EXPRESSWAY or "Fonts\\FRIZQT__.TTF"
+        -- The settings window font is independent of the global game font.
+        local fontPath = (_moLabelFont and _moLabelFont[1]) or EllesmereUI.GetOptionsFontPath() or "Fonts\\FRIZQT__.TTF"
         searchEdit = CreateFrame("EditBox", nil, menu)
         searchEdit:SetPoint("TOPLEFT", menu, "TOPLEFT", 1, -1)
         searchEdit:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -1, -1)
@@ -2834,7 +2834,7 @@ EllesmereUI.TogglePillFit        = PX.ToggleFit
 -------------------------------------------------------------------------------
 function EllesmereUI.ShowPickMenu(anchor, opts)
     opts = opts or {}
-    local fontPath = opts.fontPath or "Fonts\\FRIZQT__.TTF"
+    local fontPath = opts.fontPath or EllesmereUI.GetOptionsFontPath("Fonts\\FRIZQT__.TTF")
     local width = opts.width or 230
     local maxH = opts.maxHeight or 320
     local items = opts.items or {}

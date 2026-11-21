@@ -856,7 +856,7 @@ function ns.UFO_BuildDisplaySection(parent, y, ctx)
     -- Dimmed "(Applies to All Units)" subtitle next to the label (CDM subtitle pattern).
     do
         local suffix = decRow._leftRegion:CreateFontString(nil, "OVERLAY")
-        suffix:SetFont(EllesmereUI.EXPRESSWAY, 11, "")
+        suffix:SetFont(EllesmereUI.GetOptionsFontPath(), 11, "")
         suffix:SetTextColor(1, 1, 1, 0.35)
         suffix:SetText(EllesmereUI.L("(Applies to All Units)"))
         local lbl

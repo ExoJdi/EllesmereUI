@@ -50,7 +50,7 @@ function EllesmereUI.BuildUnlockPlaceholder(opts)
     f._brd = EllesmereUI.MakeBorder(f, ar, ag, ab, 0.6)
 
     -- White centered label matching unlock mode mover style
-    local fontPath = (EllesmereUI.GetFontPath("extras"))
+    local fontPath = EllesmereUI.GetOptionsFontPath(EllesmereUI.GetFontPath("extras"))
         or "Interface\\AddOns\\EllesmereUI\\media\\fonts\\Expressway.TTF"
     local label = f:CreateFontString(nil, "OVERLAY")
     label:SetFont(fontPath, 10, "OUTLINE, SLUG")
