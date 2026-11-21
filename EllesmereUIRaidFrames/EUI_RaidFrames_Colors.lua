@@ -771,7 +771,7 @@ local function LayoutTopNameBar(s, baseH, powerH, healthBar, tnb, tnbBg, tnbText
         tnbBg:SetColorTexture(bgc.r or 17/255, bgc.g or 17/255, bgc.b or 17/255, (s.topNameBarBgOpacity or 80) / 100)
     end
     if tnbText then
-        ApplyFont(tnbText, s.topNameBarTextSize or 11)
+        ApplyFont(tnbText, s.topNameBarTextSize or 11, "name")
         ns.RF_PlaceTopNameText(tnbText, tnb, s)
         -- Force re-layout on a JustifyH change (WoW doesn't relayout otherwise)
         local cur = tnbText:GetText()

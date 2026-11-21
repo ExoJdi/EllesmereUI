@@ -151,7 +151,7 @@ BuildCastBar = function()
 
         -- Spell name text
         local nameText = textFrame:CreateFontString(nil, "OVERLAY")
-        SetRBFont(nameText, GetRBFont(), 11)
+        SetRBFont(nameText, GetRBFont(), 11, "name")
         nameText:SetPoint("LEFT", bar, "LEFT", 4, 0)
         nameText:SetJustifyH("LEFT")
         nameText:SetWordWrap(false)
@@ -160,7 +160,7 @@ BuildCastBar = function()
 
         -- Timer text
         local timerText = textFrame:CreateFontString(nil, "OVERLAY")
-        SetRBFont(timerText, GetRBFont(), 11)
+        SetRBFont(timerText, GetRBFont(), 11, "duration")
         timerText:SetPoint("RIGHT", bar, "RIGHT", -4, 0)
         timerText:SetJustifyH("RIGHT")
         timerText:SetWordWrap(false)
@@ -574,7 +574,7 @@ end
     -- Timer / duration text (auto-sized, anchored to its side)
     local timerText = castBarFrame._timerText
     if cb.showTimer then
-        SetRBFont(timerText, GetRBFont(), cb.timerSize or 11)
+        SetRBFont(timerText, GetRBFont(), cb.timerSize or 11, "duration")
         local pt, xb, jh = ns.GetCastTextAnchor(durSide, false, timerW)
         timerText:ClearAllPoints()
         timerText:SetJustifyH(jh)
@@ -589,7 +589,7 @@ end
     -- Spell name text
     local nameText = castBarFrame._nameText
     if cb.showSpellText then
-        SetRBFont(nameText, GetRBFont(), cb.spellTextSize or 11)
+        SetRBFont(nameText, GetRBFont(), cb.spellTextSize or 11, "name")
         local pt, xb, jh = ns.GetCastTextAnchor(spellSide, cb.showTimer and durSide == spellSide, timerW)
         nameText:ClearAllPoints()
         nameText:SetJustifyH(jh)

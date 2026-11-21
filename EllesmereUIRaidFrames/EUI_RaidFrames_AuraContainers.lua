@@ -229,6 +229,7 @@ local function ApplyRFDebuffText(button, d, style)
     end
     local path = (EllesmereUI.GetFontPath("raidFrames")) or FALLBACK_FONT
     if d.duration then
+        local path = EllesmereUI.ResolveFontRole("raidFrames", "duration", nil, path)
         -- Always font the string even hidden: the engine SetText()s every registered
         -- duration string on display updates, and an unfonted FontString hard-errors.
         local fontKey = path .. "|" .. (style.durSize or 8)
@@ -250,6 +251,7 @@ local function ApplyRFDebuffText(button, d, style)
         d.duration:SetShown(not style.hideDurationText)
     end
     if d.stack then
+        local path = EllesmereUI.ResolveFontRole("raidFrames", "stacks", nil, path)
         d.stack:SetShown(style.showStacks ~= false)
         local fontKey = path .. "|" .. (style.stackSize or 8)
         if d.rfStackFont ~= fontKey then

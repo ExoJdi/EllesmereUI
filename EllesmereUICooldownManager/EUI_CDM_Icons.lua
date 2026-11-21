@@ -369,7 +369,7 @@ function ns.StyleOverlayCooldownText(oCd, barData, ssb, iconScale)
     if ssb and ssb.showCooldownText ~= nil then showCD = ssb.showCooldownText end
     oCd:SetHideCountdownNumbers(not showCD)
     if not showCD then return end
-    local cdFont = GetCDMFont()
+    local cdFont = GetCDMFont("duration")
     local cdSize = ((ssb and ssb.cooldownFontSize) or (barData and barData.cooldownFontSize) or 12) * fontScale
     local cdR = (ssb and ssb.cooldownTextR) or (barData and barData.cooldownTextR) or 1
     local cdG = (ssb and ssb.cooldownTextG) or (barData and barData.cooldownTextG) or 1
@@ -549,7 +549,7 @@ function ns.StyleCustomChargeText(icon, barKey, fs)
     elseif scPoint == "left" then scPoint = "LEFT"
     elseif scPoint == "right" then scPoint = "RIGHT"
     else scPoint = "BOTTOMRIGHT"; scY = scY + 2 end
-    SetBlizzCDMFont(fs, GetCDMFont(), scSize,
+    SetBlizzCDMFont(fs, GetCDMFont("stacks"), scSize,
         barData.stackCountR or 1, barData.stackCountG or 1, barData.stackCountB or 1)
     -- Parent onto the text overlay so it renders above the border.
     local fd = _getFD(icon)
@@ -858,7 +858,7 @@ local function RefreshCDMIconAppearance(barKey)
             local cdTextHost = CdmCountdownHost(icon, cd, barData.cooldownTextAboveGlow)
             -- Apply cooldown text font directly.
             if showCD then
-                local cdFont = GetCDMFont()
+                local cdFont = GetCDMFont("duration")
                 local cdSize = ((ssb and ssb.cooldownFontSize) or barData.cooldownFontSize or 12) * fontScale
                 local cdR = (ssb and ssb.cooldownTextR) or barData.cooldownTextR or 1
                 local cdG = (ssb and ssb.cooldownTextG) or barData.cooldownTextG or 1
@@ -896,7 +896,7 @@ local function RefreshCDMIconAppearance(barKey)
         end
         -- Style Blizzard's native stack/charge text elements: raise their sub-frames above our
         -- border frame by bumping frame level (safe -- they are Blizzard's own children of the icon and follow frame reuse). Per-icon Charge/Stack override (ssb) falls back to the bar's values.
-        local scFont = GetCDMFont()
+        local scFont = GetCDMFont("stacks")
         local scSize = ((ssb and ssb.stackCountSize) or barData.stackCountSize or 11) * fontScale
         local scR = (ssb and ssb.stackCountR) or barData.stackCountR or 1
         local scG = (ssb and ssb.stackCountG) or barData.stackCountG or 1

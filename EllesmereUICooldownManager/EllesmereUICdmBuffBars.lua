@@ -49,7 +49,7 @@ local function FormatTime(remaining)
     return format("%.1f", remaining)
 end
 
-local function SetFont(fs, size) EllesmereUI.ApplyModuleFont(fs, nil, size, "cdm") end
+local function SetFont(fs, size, role) EllesmereUI.ApplyModuleFont(fs, nil, size, "cdm", nil, role) end
 
 local function SetTBBTextColor(fs, cfg, prefix)
     if not fs or not cfg then return end

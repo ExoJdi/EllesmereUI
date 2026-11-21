@@ -629,7 +629,7 @@ local function StyleButton(button)
         tnbBg:SetAllPoints()
         if PP then PP.DisablePixelSnap(tnbBg) end
         local tnbText = tnb:CreateFontString(nil, "OVERLAY")
-        ApplyFont(tnbText, s.topNameBarTextSize or 11)
+        ApplyFont(tnbText, s.topNameBarTextSize or 11, "name")
         tnbText:SetWordWrap(false)
         d.topNameBar = tnb
         d.topNameBarBg = tnbBg

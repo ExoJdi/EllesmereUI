@@ -1483,6 +1483,7 @@ local function ApplyUFText(button, d, style)
     end
     local path = style.fontPath or FALLBACK_FONT
     if d.duration then
+        local path = EllesmereUI.ResolveFontRole("unitFrames", "duration", nil, path)
         local fontKey = path .. "|" .. (style.cdTextSize or 10)
         if d.ufDurFont ~= fontKey then
             d.ufDurFont = fontKey
@@ -1521,6 +1522,7 @@ local function ApplyUFText(button, d, style)
         end
     end
     if d.stack then
+        local path = EllesmereUI.ResolveFontRole("unitFrames", "stacks", nil, path)
         local fontKey = path .. "|" .. (style.stackSize or 14)
         if d.ufStackFont ~= fontKey then
             d.ufStackFont = fontKey

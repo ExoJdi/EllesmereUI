@@ -193,12 +193,12 @@ local function BuildBar(obj)
     obj.textFrame = textFrame
     -- Font before any SetText (a FontString with no font errors on SetText).
     local label = textFrame:CreateFontString(nil, "OVERLAY")
-    ns.SetRBFont(label, ns.GetRBFont(), 11)
+    ns.SetRBFont(label, ns.GetRBFont(), 11, "name")
     label:SetWordWrap(false)
     label:SetText("")
     obj.label = label
     local time = textFrame:CreateFontString(nil, "OVERLAY")
-    ns.SetRBFont(time, ns.GetRBFont(), 11)
+    ns.SetRBFont(time, ns.GetRBFont(), 11, "duration")
     time:SetWordWrap(false)
     time:SetText("")
     obj.time = time
@@ -227,9 +227,9 @@ local function BuildBar(obj)
 end
 
 -- A text on its side of the bar: left, right or center (none hides it).
-local function PlaceText(fs, f, side, size, x, y, r, g, b, a)
+local function PlaceText(fs, f, side, size, x, y, r, g, b, a, role)
     if side == "none" then fs:Hide(); return end
-    ns.SetRBFont(fs, ns.GetRBFont(), size)
+    ns.SetRBFont(fs, ns.GetRBFont(), size, role)
     fs:ClearAllPoints()
     if side == "center" then
         fs:SetPoint("CENTER", f, "CENTER", x, y)
@@ -372,9 +372,9 @@ local function ApplyLook(obj, cfg, own)
     local labelSide = (cfg.showSpellText == false) and "none" or (cfg.spellTextSide or "left")
     local timeSide = (cfg.showTimer == false) and "none" or (cfg.timerSide or "right")
     PlaceText(obj.label, f, labelSide, cfg.spellTextSize or 11, cfg.spellTextX or 0, cfg.spellTextY or 0,
-        cfg.spellTextR or 1, cfg.spellTextG or 1, cfg.spellTextB or 1, cfg.spellTextA or 1)
+        cfg.spellTextR or 1, cfg.spellTextG or 1, cfg.spellTextB or 1, cfg.spellTextA or 1, "name")
     PlaceText(obj.time, f, timeSide, cfg.timerSize or 11, cfg.timerX or 0, (cfg.timerY or 0) + timerNudge,
-        cfg.timerR or 1, cfg.timerG or 1, cfg.timerB or 1, cfg.timerA or 1)
+        cfg.timerR or 1, cfg.timerG or 1, cfg.timerB or 1, cfg.timerA or 1, "duration")
 
     -- Rounded corners (EllesmereUI_RoundedCorners.lua; nothing at radius 0).
     -- The body is the clip (fill + spark) and the background.

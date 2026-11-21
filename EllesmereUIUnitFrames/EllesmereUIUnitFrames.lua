@@ -1434,7 +1434,8 @@ local function ResolveFontPath(unitKey)
     end
 end
 
-local function GetSelectedFont(unitKey)
+local function GetSelectedFont(unitKey, role)
+    if role then return EllesmereUI.GetFontPath("unitFrames", role) end
     if unitKey and cachedFontPaths[unitKey] then
         return cachedFontPaths[unitKey]
     end
@@ -1446,8 +1447,17 @@ end
 -- own faces draw Cyrillic, Korean and Chinese. A plain SetFont would pin a
 -- string's face for good, so every font write to these strings goes through
 -- here (or ApplyModuleFontFamily).
-local function SetFSFont(fs, size, flags)
-  EllesmereUI.ApplyModuleFontFamily(fs, GetSelectedFont(), size or 12, "unitFrames", flags)
+local function SetFSFont(fs, size, flags, role)
+  EllesmereUI.ApplyModuleFontFamily(fs, GetSelectedFont(nil, role), size or 12, "unitFrames", flags)
+end
+
+function ns.UF_FontRole(content)
+    if not content then return nil end
+    if content:find("name", 1, true) then return "name" end
+    if content == "both" or content == "bothdash" or content:find("hp", 1, true)
+       or content:find("health", 1, true) or content:find("absorb", 1, true) then
+        return "health"
+    end
 end
 
 -- Shared cast-bar text anchoring (mirrors the nameplate cast text system). Three

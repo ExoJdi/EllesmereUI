@@ -157,13 +157,13 @@ ReloadFramesBody = function()
             -- Apply cast bar text settings
             if frame.Castbar.Text then
                 local snSz = settings.castSpellNameSize or 11
-                SetFSFont(frame.Castbar.Text, snSz)
+                SetFSFont(frame.Castbar.Text, snSz, nil, "name")
                 local snC = settings.castSpellNameColor or { r=1, g=1, b=1 }
                 frame.Castbar.Text:SetTextColor(snC.r, snC.g, snC.b)
             end
             if frame.Castbar.Time then
                 local dtSz = settings.castDurationSize or 10
-                SetFSFont(frame.Castbar.Time, dtSz)
+                SetFSFont(frame.Castbar.Time, dtSz, nil, "duration")
                 local dtC = settings.castDurationColor or { r=1, g=1, b=1 }
                 frame.Castbar.Time:SetTextColor(dtC.r, dtC.g, dtC.b)
                 frame.Castbar._showDuration = settings.showCastDuration ~= false
@@ -176,7 +176,7 @@ ReloadFramesBody = function()
             end
             if frame.Castbar.Target then
                 local tsSz = settings.castSpellTargetSize or 11
-                SetFSFont(frame.Castbar.Target, tsSz)
+                SetFSFont(frame.Castbar.Target, tsSz, nil, "name")
                 local tsC = settings.castSpellTargetColor or { r=1, g=1, b=1 }
                 frame.Castbar.Target:SetTextColor(tsC.r, tsC.g, tsC.b)
                 frame.Castbar._showTarget = settings.showCastTarget ~= false
@@ -653,13 +653,13 @@ ReloadFramesBody = function()
                             -- Apply cast bar text settings
                             if frame.Castbar.Text then
                                 local snSz = settings.castSpellNameSize or 11
-                                SetFSFont(frame.Castbar.Text, snSz)
+                                SetFSFont(frame.Castbar.Text, snSz, nil, "name")
                                 local snC = settings.castSpellNameColor or { r=1, g=1, b=1 }
                                 frame.Castbar.Text:SetTextColor(snC.r, snC.g, snC.b)
                             end
                             if frame.Castbar.Time then
                                 local dtSz = settings.castDurationSize or 10
-                                SetFSFont(frame.Castbar.Time, dtSz)
+                                SetFSFont(frame.Castbar.Time, dtSz, nil, "duration")
                                 local dtC = settings.castDurationColor or { r=1, g=1, b=1 }
                                 frame.Castbar.Time:SetTextColor(dtC.r, dtC.g, dtC.b)
                                 frame.Castbar._showDuration = settings.showCastDuration ~= false
@@ -673,7 +673,7 @@ ReloadFramesBody = function()
                             end
                             if frame.Castbar.Target then
                                 local tsSz = settings.castSpellTargetSize or 11
-                                SetFSFont(frame.Castbar.Target, tsSz)
+                                SetFSFont(frame.Castbar.Target, tsSz, nil, "name")
                                 local tsC = settings.castSpellTargetColor or { r=1, g=1, b=1 }
                                 frame.Castbar.Target:SetTextColor(tsC.r, tsC.g, tsC.b)
                                 frame.Castbar._showTarget = settings.showCastTarget ~= false
@@ -1012,13 +1012,13 @@ ReloadFramesBody = function()
                         -- Apply cast bar text settings
                         if frame.Castbar.Text then
                             local snSz = settings.castSpellNameSize or 11
-                            SetFSFont(frame.Castbar.Text, snSz)
+                            SetFSFont(frame.Castbar.Text, snSz, nil, "name")
                             local snC = settings.castSpellNameColor or { r=1, g=1, b=1 }
                             frame.Castbar.Text:SetTextColor(snC.r, snC.g, snC.b)
                         end
                         if frame.Castbar.Time then
                             local dtSz = settings.castDurationSize or 10
-                            SetFSFont(frame.Castbar.Time, dtSz)
+                            SetFSFont(frame.Castbar.Time, dtSz, nil, "duration")
                             local dtC = settings.castDurationColor or { r=1, g=1, b=1 }
                             frame.Castbar.Time:SetTextColor(dtC.r, dtC.g, dtC.b)
                             frame.Castbar._showDuration = settings.showCastDuration ~= false
@@ -1031,7 +1031,7 @@ ReloadFramesBody = function()
                         end
                         if frame.Castbar.Target then
                             local tsSz = settings.castSpellTargetSize or 11
-                            SetFSFont(frame.Castbar.Target, tsSz)
+                            SetFSFont(frame.Castbar.Target, tsSz, nil, "name")
                             local tsC = settings.castSpellTargetColor or { r=1, g=1, b=1 }
                             frame.Castbar.Target:SetTextColor(tsC.r, tsC.g, tsC.b)
                             frame.Castbar._showTarget = settings.showCastTarget ~= false
@@ -1449,13 +1449,13 @@ ReloadFramesBody = function()
                     end
                     if frame.Castbar.Text then
                         local snSz = settings.castSpellNameSize or 11
-                        SetFSFont(frame.Castbar.Text, snSz)
+                        SetFSFont(frame.Castbar.Text, snSz, nil, "name")
                         local snC = settings.castSpellNameColor or { r=1, g=1, b=1 }
                         frame.Castbar.Text:SetTextColor(snC.r, snC.g, snC.b)
                     end
                     if frame.Castbar.Time then
                         local dtSz = settings.castDurationSize or 10
-                        SetFSFont(frame.Castbar.Time, dtSz)
+                        SetFSFont(frame.Castbar.Time, dtSz, nil, "duration")
                         local dtC = settings.castDurationColor or { r=1, g=1, b=1 }
                         frame.Castbar.Time:SetTextColor(dtC.r, dtC.g, dtC.b)
                         frame.Castbar._showDuration = settings.showCastDuration ~= false
@@ -1468,7 +1468,7 @@ ReloadFramesBody = function()
                     end
                     if frame.Castbar.Target then
                         local tsSz = settings.castSpellTargetSize or 11
-                        SetFSFont(frame.Castbar.Target, tsSz)
+                        SetFSFont(frame.Castbar.Target, tsSz, nil, "name")
                         local tsC = settings.castSpellTargetColor or { r=1, g=1, b=1 }
                         frame.Castbar.Target:SetTextColor(tsC.r, tsC.g, tsC.b)
                         frame.Castbar._showTarget = settings.showCastTarget ~= false
@@ -1681,31 +1681,32 @@ ReloadFramesBody = function()
 
             -- Helper: set font on a FontString, using donor font for mini frames.
             -- A font family, as SetFSFont gives.
-            local function SetMiniFont(fs, sz)
+            local function SetMiniFont(fs, sz, role)
                 if not fs or not fs.SetFont then return end
                 if isMiniFrame then
-                    EllesmereUI.ApplyModuleFontFamily(fs, donorFontPath, sz or 12, "unitFrames")
+                    local path = EllesmereUI.ResolveFontRole("unitFrames", role, nil, donorFontPath)
+                    EllesmereUI.ApplyModuleFontFamily(fs, path, sz or 12, "unitFrames")
                 else
-                    SetFSFont(fs, sz)
+                    SetFSFont(fs, sz, nil, role)
                 end
             end
 
             if frame.NameText then
                 local s = isMiniFrame and donorSettings or GetSettingsForUnit(unit)
                 local rts = s.leftTextSize or s.textSize or 12
-                SetMiniFont(frame.NameText, rts)
+                SetMiniFont(frame.NameText, rts, ns.UF_FontRole(s.leftTextContent or "name"))
                 frame.NameText:SetWordWrap(false)
             end
             if frame.HealthValue then
                 local s = isMiniFrame and donorSettings or GetSettingsForUnit(unit)
                 local rts = s.rightTextSize or s.textSize or 12
-                SetMiniFont(frame.HealthValue, rts)
+                SetMiniFont(frame.HealthValue, rts, ns.UF_FontRole(s.rightTextContent or "both"))
                 frame.HealthValue:SetWordWrap(false)
             end
             if frame.CenterText then
                 local s = isMiniFrame and donorSettings or GetSettingsForUnit(unit)
                 local cts = s.centerTextSize or s.textSize or 12
-                SetMiniFont(frame.CenterText, cts)
+                SetMiniFont(frame.CenterText, cts, ns.UF_FontRole(s.centerTextContent))
                 frame.CenterText:SetWordWrap(false)
             end
 
@@ -1721,11 +1722,11 @@ ReloadFramesBody = function()
                 local s = isMiniFrame and donorSettings or settings
                 if frame.Castbar.Text then
                     local snSz = s.castSpellNameSize or 11
-                    SetMiniFont(frame.Castbar.Text, snSz)
+                    SetMiniFont(frame.Castbar.Text, snSz, "name")
                 end
                 if frame.Castbar.Time then
                     local dtSz = s.castDurationSize or 10
-                    SetMiniFont(frame.Castbar.Time, dtSz)
+                    SetMiniFont(frame.Castbar.Time, dtSz, "duration")
                 end
                 -- Boss frames get their full cast text refresh in the boss branch above
                 -- (colors/show/sides/bg). Two gaps remain: the donor-font line just above
@@ -1735,9 +1736,9 @@ ReloadFramesBody = function()
                 -- on every cast-text option change.
                 if unit:match("^boss") then
                     local cb = frame.Castbar
-                    if cb.Text then SetMiniFont(cb.Text, settings.castSpellNameSize or 11) end
-                    if cb.Time then SetMiniFont(cb.Time, settings.castDurationSize or 10) end
-                    if cb.Target then SetMiniFont(cb.Target, settings.castSpellTargetSize or 11) end
+                    if cb.Text then SetMiniFont(cb.Text, settings.castSpellNameSize or 11, "name") end
+                    if cb.Time then SetMiniFont(cb.Time, settings.castDurationSize or 10, "duration") end
+                    if cb.Target then SetMiniFont(cb.Target, settings.castSpellTargetSize or 11, "name") end
                     if cb._syncOffsetsAndLayout then cb:_syncOffsetsAndLayout(settings) end
                 end
             end

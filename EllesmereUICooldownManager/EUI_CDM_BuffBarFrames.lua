@@ -79,7 +79,7 @@ local function CreateTrackedBuffBarFrame(parent, idx)
 
     -- Timer text
     local timerText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFont(timerText, 11)
+    SetFont(timerText, 11, "duration")
     timerText:SetTextColor(1, 1, 1, 0.9)
     timerText:SetPoint("RIGHT", bar, "RIGHT", -4, 0)
     timerText:SetJustifyH("RIGHT")
@@ -87,7 +87,7 @@ local function CreateTrackedBuffBarFrame(parent, idx)
 
     -- Name text
     local nameText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFont(nameText, 11)
+    SetFont(nameText, 11, "name")
     nameText:SetTextColor(1, 1, 1, 0.9)
     nameText:SetPoint("LEFT", bar, "LEFT", 4, 0)
     nameText:SetJustifyH("LEFT")
@@ -95,7 +95,7 @@ local function CreateTrackedBuffBarFrame(parent, idx)
 
     -- Stacks text
     local stacksText = textOverlay:CreateFontString(nil, "OVERLAY")
-    SetFont(stacksText, 11)
+    SetFont(stacksText, 11, "stacks")
     stacksText:SetTextColor(1, 1, 1, 0.9)
     stacksText:SetPoint("CENTER", bar, "CENTER", 0, 0)
     stacksText:Hide()
@@ -857,7 +857,7 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
     local timerPos = cfg.timerPosition or (cfg.showTimer and "right" or "none")
     if timerPos ~= "none" then
         bar._timerText:Show()
-        SetFont(bar._timerText, cfg.timerSize or 11)
+        SetFont(bar._timerText, cfg.timerSize or 11, "duration")
         bar._timerText:ClearAllPoints()
         local tX, tY = cfg.timerX or 0, cfg.timerY or 0
         if isVert and timerPos == "center" then
@@ -909,7 +909,7 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
     local namePos = cfg.namePosition or ((cfg.showName ~= false) and "left" or "none")
     if namePos ~= "none" and not isVert then
         bar._nameText:Show()
-        SetFont(bar._nameText, cfg.nameSize or 11)
+        SetFont(bar._nameText, cfg.nameSize or 11, "name")
         bar._nameText:ClearAllPoints()
         local nX, nY = cfg.nameX or 0, cfg.nameY or 0
         if namePos == "center" then
@@ -975,7 +975,7 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
             bar._stacksHidden = true
         else
             bar._stacksHidden = nil
-            SetFont(bar._stacksText, cfg.stacksSize or 11)
+            SetFont(bar._stacksText, cfg.stacksSize or 11, "stacks")
             bar._stacksText:ClearAllPoints()
             local sX, sY = cfg.stacksX or 0, cfg.stacksY or 0
             if sPos == "top" then

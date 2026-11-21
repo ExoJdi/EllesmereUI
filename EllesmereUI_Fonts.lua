@@ -344,17 +344,40 @@ function EllesmereUI.GetModuleFontEntry(addonKey)
     return nil
 end
 
--- Resolved font path for an addon key; falls back to the global font with no override.
-function EllesmereUI.GetFontPath(addonKey)
+-- Role overrides inherit the existing module/global face when unset.
+function EllesmereUI.GetFontRoleName(addonKey, role)
+    if not role then return nil end
+    local db = EllesmereUI.GetFontsDB()
+    local folder = EllesmereUI._addonKeyToFolder[addonKey] or addonKey
+    local module = db.moduleRoles and db.moduleRoles[folder]
+    local name = module and module[role]
+    if name and name ~= "__global" then return name end
+    name = db.roles and db.roles[role]
+    return name ~= "__global" and name or nil
+end
+
+function EllesmereUI.ResolveFontRole(addonKey, role, explicitPath, fallbackPath)
+    if explicitPath then return explicitPath end
+    if EllesmereUI.GetFontRoleName(addonKey, role) then
+        return EllesmereUI.GetFontPath(addonKey, role)
+    end
+    return fallbackPath or EllesmereUI.GetFontPath(addonKey)
+end
+
+function EllesmereUI.GetFontPath(addonKey, role)
     local c = EllesmereUI._FontCacheReady().path
     local k = addonKey or EllesmereUI._FONT_KEY_GLOBAL
+    if role then k = k .. "\2" .. role end
     local hit = c[k]
     if hit then return hit end
 
     local db = EllesmereUI.GetFontsDB()
     local override = EllesmereUI.GetModuleFontEntry(addonKey)
     local path
-    if override and override.font and override.font ~= "__global" then
+    local roleName = EllesmereUI.GetFontRoleName(addonKey, role)
+    if roleName then
+        path = ResolveFontName(roleName)
+    elseif override and override.font and override.font ~= "__global" then
         path = ResolveFontName(override.font)
     else
         path = ResolveFontName(db.global or "Expressway")
@@ -364,16 +387,20 @@ function EllesmereUI.GetFontPath(addonKey)
 end
 
 -- Get the font name (not path) for an addon key.
-function EllesmereUI.GetFontName(addonKey)
+function EllesmereUI.GetFontName(addonKey, role)
     local c = EllesmereUI._FontCacheReady().name
     local k = addonKey or EllesmereUI._FONT_KEY_GLOBAL
+    if role then k = k .. "\2" .. role end
     local hit = c[k]
     if hit then return hit end
 
     local db = EllesmereUI.GetFontsDB()
     local override = EllesmereUI.GetModuleFontEntry(addonKey)
     local name
-    if override and override.font and override.font ~= "__global" then
+    local roleName = EllesmereUI.GetFontRoleName(addonKey, role)
+    if roleName then
+        name = roleName
+    elseif override and override.font and override.font ~= "__global" then
         name = override.font
     else
         name = db.global or "Expressway"
@@ -1095,30 +1122,30 @@ end
 
 -- Applies the icon-text outline flag AND the matching shadow in one call. Checked -> "OUTLINE,
 -- SLUG", no shadow; unchecked -> the user's outline choice, and when that resolves to "" (Drop Shadow/None) a drop shadow is applied for legibility.
-function EllesmereUI.ApplyIconTextFont(fs, fontPath, size, moduleKey)
+function EllesmereUI.ApplyIconTextFont(fs, fontPath, size, moduleKey, role)
     if not (fs and fs.SetFont) then return end
     local flag = EllesmereUI.GetIconTextOutlineFlag(moduleKey)
     -- Prime the shadow FontObject before SetFont (see PrimeFontShadow).
     EllesmereUI.PrimeFontShadow(fs, flag == "")
-    fs:SetFont(fontPath, size, flag)
+    fs:SetFont(fontPath or EllesmereUI.GetFontPath(moduleKey, role), size, flag)
 end
 
 -- Body text in a module's font: fontPath/flags default to the module's (nil key = global)
 -- font and outline; a "" flag (Drop Shadow/None) gets the drop shadow.
-function EllesmereUI.ApplyModuleFont(fs, fontPath, size, moduleKey, flags)
+function EllesmereUI.ApplyModuleFont(fs, fontPath, size, moduleKey, flags, role)
     if not (fs and fs.SetFont) then return end
     flags = flags or EllesmereUI.GetFontOutlineFlag(moduleKey)
     EllesmereUI.PrimeFontShadow(fs, flags == "")
-    fs:SetFont(fontPath or EllesmereUI.GetFontPath(moduleKey), size, flags)
+    fs:SetFont(fontPath or EllesmereUI.GetFontPath(moduleKey, role), size, flags)
 end
 
 -- ApplyModuleFont for a text that can show other players' writing: the same defaults
 -- (the module's font and outline; a "" flag gets the drop shadow) as a font family
 -- (SetFontFamily). Once a string has a family, no ApplyModuleFont may reach it.
-function EllesmereUI.ApplyModuleFontFamily(fs, fontPath, size, moduleKey, flags)
+function EllesmereUI.ApplyModuleFontFamily(fs, fontPath, size, moduleKey, flags, role)
     if not (fs and fs.SetFont) then return end
     flags = flags or EllesmereUI.GetFontOutlineFlag(moduleKey)
-    EllesmereUI.SetFontFamily(fs, fontPath or EllesmereUI.GetFontPath(moduleKey), size, flags, flags == "")
+    EllesmereUI.SetFontFamily(fs, fontPath or EllesmereUI.GetFontPath(moduleKey, role), size, flags, flags == "")
 end
 
 -- Build font dropdown values/order ("EUI Global Font" first) for W:DualRow configs.

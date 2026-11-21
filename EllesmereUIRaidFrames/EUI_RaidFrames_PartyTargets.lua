@@ -660,7 +660,7 @@ ns._PT_Restyle = function()
             else
                 bg:SetAllPoints(health)
             end
-            ApplyFont(frame._nameText, nameSize)
+            ApplyFont(frame._nameText, nameSize, "name")
             styleBorder(frame)
         end
     end
@@ -994,7 +994,7 @@ local function PT_PvFrame(i, parent, s, spec)
     else
         bg:SetAllPoints(health)
     end
-    ApplyFont(name, st.nameSize or 10)
+    ApplyFont(name, st.nameSize or 10, "name")
     name:SetWidth(max(1, w - 6))
     FB.StyleBorder(f)
     local mock = PT.PV[i]

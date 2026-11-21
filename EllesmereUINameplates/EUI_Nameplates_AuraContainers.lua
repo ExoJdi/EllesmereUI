@@ -175,6 +175,7 @@ local function ApplyNPText(button, d, style)
     end
     local path = (EllesmereUI.GetFontPath("nameplates")) or "Fonts\\FRIZQT__.TTF"
     if d.duration then
+        local path = EllesmereUI.ResolveFontRole("nameplates", "duration", nil, path)
         local fontKey = path .. "|" .. (style.durSize or 11)
         if d.npDurFont ~= fontKey then
             d.npDurFont = fontKey
@@ -198,6 +199,7 @@ local function ApplyNPText(button, d, style)
         d.duration:SetShown(not style.hideDurationText)
     end
     if d.stack then
+        local path = EllesmereUI.ResolveFontRole("nameplates", "stacks", nil, path)
         d.stack:SetShown(style.showStacks ~= false)
         local fontKey = path .. "|" .. (style.stackSize or 11)
         if d.npStackFont ~= fontKey then

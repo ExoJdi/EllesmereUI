@@ -404,14 +404,14 @@ local function BuildRow(def)
     -- Font before any SetText: a FontString with no font errors on SetText
     -- ("Font not set", seen on the Forever client). ApplyRowLook re-sizes it.
     local tag = textFrame:CreateFontString(nil, "OVERLAY")
-    ns.SetRBFont(tag, ns.GetRBFont(), 11)
+    ns.SetRBFont(tag, ns.GetRBFont(), 11, "name")
     tag:SetPoint("LEFT", row, "LEFT", 4, 0)
     tag:SetJustifyH("LEFT")
     tag:SetWordWrap(false)
     tag:SetText(def.tag)
     row._tag = tag
     local time = textFrame:CreateFontString(nil, "OVERLAY")
-    ns.SetRBFont(time, ns.GetRBFont(), 11)
+    ns.SetRBFont(time, ns.GetRBFont(), 11, "duration")
     time:SetPoint("RIGHT", row, "RIGHT", -4, 0)
     time:SetJustifyH("RIGHT")
     time:SetWordWrap(false)
@@ -1308,8 +1308,8 @@ local function ApplyRowLook(row, cfg, w, h)
     UpdateSpark(row, cfg)
 
     local size = cfg.textSize or 11
-    ns.SetRBFont(row._tag, ns.GetRBFont(), size)
-    ns.SetRBFont(row._time, ns.GetRBFont(), size)
+    ns.SetRBFont(row._tag, ns.GetRBFont(), size, "name")
+    ns.SetRBFont(row._time, ns.GetRBFont(), size, "duration")
     -- Label on the left, time on the right, each with its own offsets.
     row._tag:ClearAllPoints()
     row._tag:SetPoint("LEFT", row, "LEFT", 4 + (cfg.labelX or 0), cfg.labelY or 0)
