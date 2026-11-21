@@ -86,6 +86,7 @@ local function StartAddon()
     GoldLedger.Register("bags", OnGoldChanged)
 
     -- Position: default 50px from the bottom-right corner; a saved spot overrides it
+    EUI_Bags:ClearAllPoints()
     if BP().bagsPosition then
         local pos = BP().bagsPosition
         EUI_Bags:SetPoint(pos.point, UIParent, pos.relativePoint, pos.x, pos.y)
@@ -164,6 +165,7 @@ local function StartAddon()
     -- transitions as Blizzard's container frames do: a Show on an already open
     -- bag fires no OnShow, and the login pre-build never shows the frame.
     EUI_Bags:HookScript("OnShow", function(self)
+        ApplyBagScale()
         self:Raise()
         self:RepinIconLevels()
         ns.SettleWindowPos(self, "bagsPosition")
@@ -1354,6 +1356,12 @@ local function ReleaseStaleSortMute()
     EllesmereUI.ReleaseStaleHold("Sound_EnableSFX", "EllesmereUIBags")
 end
 local loader = CreateFrame("Frame")
+local started = false
+function ns.EnsureBagsStarted()
+    if started then return end
+    started = true
+    StartAddon()
+end
 loader:RegisterEvent("PLAYER_LOGIN")
 loader:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" then
@@ -1373,9 +1381,11 @@ loader:SetScript("OnEvent", function(self, event)
     end
     -- Scheduled first, so nothing in the pass below can stop the module from starting.
     C_Timer.After(0.5, function()
-        StartAddon()
-        EUI_Bags:Hide()
-        EUI_BagsReagent:Hide()
+        if not started then
+            ns.EnsureBagsStarted()
+            EUI_Bags:Hide()
+            EUI_BagsReagent:Hide()
+        end
     end)
     -- A /reload in combat: the 0.5s start lands after the loading screen, in lockdown, where
     -- the combat guard refuses every slot and the bags would open empty all fight. Timers do

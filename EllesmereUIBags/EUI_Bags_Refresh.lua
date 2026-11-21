@@ -510,6 +510,7 @@ local function FinishRefresh(curY, gridContentW, sidebarW, regularUsed, regularT
     local currencyFooterH = UpdateCurrencyDisplays(totalW) or FOOTER_H
 
     -- A grip-set height overrides WoW Forever's grow-only content fit (Auto-Size hides the grip)
+    ns.PrepareWindowResize(EUI_Bags, "bagsPosition")
     if autoSize or (EUI.IS_FOREVER and not userH) then
         -- Screen cap (95%, or Auto-Size's Max Height); taller content scrolls
         local maxH, userCap = EUI_Bags.AutoSizeMaxH(not autoSize)

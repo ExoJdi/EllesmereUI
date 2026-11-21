@@ -2217,6 +2217,7 @@ function EUI_Bank:RefreshBank()
 
     -- Set frame size BEFORE rendering so scroll frame has non-zero bounds
     local totalW = sidebarW + gridW + gridPadX * 2 + SCROLLBAR_HIT_W + 2
+    if BP().bankPosition then ns.PrepareWindowResize(EUI_Bank, "bankPosition") end
     EUI_Bank:SetWidth(totalW)
     EUI_Bank:SetHeight(GetBankHeight())
     child:SetWidth(gridW + contentPad)
@@ -3580,6 +3581,7 @@ end)
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
+eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
 eventFrame:RegisterEvent("BAG_UPDATE")
 eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
 eventFrame:RegisterEvent("BANK_TABS_CHANGED")
@@ -3588,11 +3590,17 @@ eventFrame:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
 -- A skill rank change can flip an item's unusable tint, which the bank draws too.
 eventFrame:RegisterEvent("SKILL_LINES_CHANGED")
 if EUI.IS_FOREVER then eventFrame:RegisterEvent("BAG_CONTAINER_UPDATE") end
-eventFrame:SetScript("OnEvent", function(_, event)
+eventFrame:SetScript("OnEvent", function(_, event, interaction)
+    if event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+        local types = Enum.PlayerInteractionType
+        if not types or (interaction ~= types.Banker and interaction ~= types.AccountBanker) then return end
+        event = "BANKFRAME_CLOSED"
+    end
     if event == "BANKFRAME_OPENED" then
         -- WoW Forever's Gamepad interface style at login: Blizzard's bank
         -- (left in place) carries the D-pad navigation; ours stays closed.
         if ns.PadUIStandDown() then return end
+        ns.EnsureBagsStarted()
         -- Detect portable warbank (AccountBanker = warband only, no character bank)
         _warbandOnly = C_PlayerInteractionManager
             and C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.AccountBanker)
@@ -3607,7 +3615,7 @@ eventFrame:SetScript("OnEvent", function(_, event)
             local pos = BP().bankPosition
             EUI_Bank:SetPoint(pos.point, UIParent, pos.relativePoint, pos.x, pos.y)
         else
-            EUI_Bank:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 15, -100)
+            ns.AnchorBankBesideBags(EUI_Bank)
         end
         -- Clear search on open
         if EUI_Bank._searchBox then
@@ -3643,6 +3651,7 @@ eventFrame:SetScript("OnEvent", function(_, event)
         end
         -- Set initial size so frame is visible immediately
         local gridW = GetBankColumns() * (SLOT_SIZE + SPACING)
+        if BP().bankPosition then ns.PrepareWindowResize(EUI_Bank, "bankPosition") end
         EUI_Bank:SetWidth(GetBankSidebarWidth() + gridW + 10 * 2 + SCROLLBAR_HIT_W + 2)
         EUI_Bank:SetHeight(GetBankHeight())
         -- Bank item data loads asynchronously after BANKFRAME_OPENED.
@@ -3662,7 +3671,6 @@ eventFrame:SetScript("OnEvent", function(_, event)
         end)
 
     elseif event == "BANKFRAME_CLOSED" then
-        if ns.PadUIStandDown() then return end  -- Forever Gamepad style: ours never opened
         _warbandOnly = false
         _lastTSMBankType = nil
         WipeTransferState()

@@ -223,6 +223,21 @@ function ns.SaveWindowPos(frame, key)
     end
 end
 
+function ns.PrepareWindowResize(frame, key)
+    if not ns.WindowCornerOn() or frame._resizing then return end
+    local pos = BP()[key]
+    if not pos or not pos.corner then ns.SaveWindowCorner(frame, key) end
+end
+
+function ns.AnchorBankBesideBags(frame)
+    local ratio = UIParent:GetEffectiveScale() / EUI_Bags:GetEffectiveScale()
+    local center = EUI_Bags:GetCenter()
+    local right = center and center < UIParent:GetWidth() * ratio / 2
+    frame:ClearAllPoints()
+    frame:SetPoint(right and "TOPLEFT" or "TOPRIGHT", EUI_Bags,
+        right and "TOPRIGHT" or "TOPLEFT", right and 12 or -12, 0)
+end
+
 -- Call when the window shows: a spot saved in the other form (the switch was
 -- flipped since) is saved again where the window stands, a frame later so the
 -- open's refresh has sized it. Never in combat: a later open does it.
