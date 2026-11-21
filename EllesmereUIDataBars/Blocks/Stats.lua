@@ -81,7 +81,7 @@ local function MakeStatBlock(blockCfg, slot, content, barCtx, opts)
     frame:SetSize(60, 20); frame:EnableMouse(true); frame:RegisterForClicks("AnyUp")
     -- Icon is optional: blocks without opts.hasIcon are text-only.
     local icon
-    if opts.hasIcon then
+    if opts.hasIcon and (not opts.iconDefaultOff or D().showIcon == true) then
         icon = frame:CreateTexture(nil, "OVERLAY")
         icon:SetPoint("LEFT")
     end
@@ -120,6 +120,10 @@ local function MakeStatBlock(blockCfg, slot, content, barCtx, opts)
         -- 0.4333 = 13px at the 30 base (1px under the standard 0.46 block text).
         local fontSize = max(9, floor(CONTENT_BASE * 0.4333 + 0.5))
         local d = D()
+        if opts.hasIcon and opts.iconDefaultOff and d.showIcon == true and not icon then
+            icon = frame:CreateTexture(nil, "OVERLAY")
+            icon:SetPoint("LEFT")
+        end
         local gap = ICON_GAP
         local isSide = barCtx.IsVertical()
         if lastVal < 0 then lastVal = opts.sample() end
