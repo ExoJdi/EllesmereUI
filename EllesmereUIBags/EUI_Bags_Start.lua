@@ -191,6 +191,10 @@ local function StartAddon()
     end)
 
     EUI_Bags:HookScript("OnHide", function()
+        if not EUI_Bags:IsShown() then
+            if BP().bagRecentFirstOpenOnly and EUI_Bags.ClearRecentItems then EUI_Bags:ClearRecentItems() end
+            if BP().bagCompactStable and ns.ResetCompactSession then ns.ResetCompactSession() end
+        end
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
         EUI_Bags._closeSoundAt = GetTime()
         -- A tip left up without Okay must not come back with the window (in combat too)
@@ -999,6 +1003,7 @@ local function StartAddon()
             EUI_Bags:RefreshInventory()
             local detach = BP().detachReagentBag or false
             if detach and EUI_BagsReagent:IsVisible() then EUI_BagsReagent:RefreshInventory() end
+            ns.RefreshHoveredBagTooltip()
         end
         refreshPending, refreshAgain, refreshDefers = false, false, 0
     end

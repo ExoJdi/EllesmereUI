@@ -643,6 +643,7 @@ local ZONE_PIN, ZONE_ASSIGN = 1, 2
 local gN, cN = 0, 0
 local gLabel, gHint, gInter, gClear, gSize, gW, gLi = {}, {}, {}, {}, {}, {}, {}
 local gZone, gKey, gPlanW, gReag = {}, {}, {}, {}
+local gStableID = {}
 local cData = {}
 -- A counted label per group index and what it was made from, so an
 -- unchanged label makes no string
@@ -651,6 +652,80 @@ local bagLabels = {}
 local bagOut
 -- Drop zones are never shown in OneBag / MultiBag (read once per pass)
 local zonesOn = false
+local stableSession
+local STABLE_EMPTY = { bag=0, slot=0 }
+
+function ns.ResetCompactSession()
+    stableSession = nil
+end
+
+local function StableGroups(columns, size, startY)
+    if not BP().bagCompactStable then stableSession = nil; return end
+    local selection, group = ns.GetSelection()
+    -- Physical-slot views already keep their slots in bag order.
+    if selection < 0 then stableSession = nil; return end
+    local search = EUI_Bags._searchBox and EUI_Bags._searchBox:GetText() or ""
+    local s = stableSession
+    if s and (s.selection ~= selection or s.group ~= group or s.columns ~= columns
+        or s.size ~= size or s.pitch ~= PITCH or s.startY ~= startY or s.search ~= search) then s = nil end
+    local first = not s
+    if first then
+        s = { selection=selection, group=group, columns=columns, size=size, pitch=PITCH,
+            startY=startY, search=search, groups={}, known={}, extra={}, live={}, out=ns.CompactNewOut() }
+        stableSession = s
+    end
+    wipe(s.live)
+    local ci = 0
+    for g = 1, gN do
+        local label = gLabel[g] and gLabel[g]:gsub(" %(%d+%)$", "")
+        local id = tostring(gKey[g]) .. ":" .. tostring(gStableID[g] or label)
+        local saved
+        if first then
+            saved = { label=label, hint=gHint[g], inter=gInter[g], clear=gClear[g],
+                zone=gZone[g], key=gKey[g], reagent=gReag[g], cells={} }
+            s.groups[g] = saved
+        end
+        for j = 1, gSize[g] do
+            ci = ci + 1
+            local d = cData[ci]
+            local key = id .. ":" .. d.bag .. ":" .. d.slot .. ":" .. (d.info and d.info.itemID or 0)
+            s.live[key] = d
+            if first then
+                saved.cells[j] = key
+                s.known[key] = true
+            elseif not s.known[key] then
+                s.extra[#s.extra + 1] = key
+                s.known[key] = true
+            end
+        end
+    end
+    gN, cN = #s.groups, 0
+    for g, saved in ipairs(s.groups) do
+        local count = 0
+        for _, key in ipairs(saved.cells) do
+            cN = cN + 1
+            cData[cN] = s.live[key] or STABLE_EMPTY
+            if s.live[key] then count = count + 1 end
+        end
+        gLabel[g] = saved.label and (saved.label .. " (" .. count .. ")") or false
+        gHint[g], gInter[g], gClear[g] = saved.hint, saved.inter, saved.clear
+        gZone[g], gKey[g], gReag[g], gSize[g] = saved.zone, saved.key, saved.reagent, #saved.cells
+    end
+    s.baseCells = cN
+    if #s.extra > 0 then
+        local count = 0
+        for _, key in ipairs(s.extra) do
+            cN = cN + 1
+            cData[cN] = s.live[key] or STABLE_EMPTY
+            if s.live[key] then count = count + 1 end
+        end
+        gN = gN + 1
+        gLabel[gN] = EllesmereUI.L("New Items") .. " (" .. count .. ")"
+        gHint[gN], gInter[gN], gClear[gN] = false, false, false
+        gZone[gN], gKey[gN], gReag[gN], gSize[gN] = false, false, false, #s.extra
+    end
+    return s
+end
 
 -- Group g's label: "<a>: <b> (<n>)", or "<b> (<n>)" when a is false
 local function CountLabel(g, a, b, n)
@@ -709,6 +784,7 @@ function ns.CompactBagsSection(name, items, kind, assignKey, keepEmpty, hint, re
             local bn = #bItems
             if bn > 0 then
                 AddGroup(CountLabel(gN + 1, first and name, bucket.label, bn), false, false, false, zone, assignKey, reagent)
+                if BP().bagCompactStable then gStableID[gN] = name .. ":" .. bucket.label end
                 for j = 1, bn do AddCell(bItems[j]) end
                 first = false
             end
@@ -727,6 +803,7 @@ function ns.CompactBagsSection(name, items, kind, assignKey, keepEmpty, hint, re
     -- category stay as a label-only block (a drop target)
     if count == 0 and not pin and not assignKey and not keepEmpty then return end
     AddGroup(name ~= "" and CountLabel(gN + 1, false, name, count) or false, hint, false, clear, zone, assignKey, reagent)
+    if BP().bagCompactStable then gStableID[gN] = name .. ":" .. (kind or "flat") end
     for j = 1, count do AddCell(items[j]) end
 end
 
@@ -900,8 +977,9 @@ end
 -- Lays out and draws the pass's groups from startY down, then their drop
 -- zones; returns the advanced slotIdx and the content bottom (curY)
 function ns.CompactBagsPlace(child, startX, startY, columns, slotIdx)
-    local n = gN
     local size = GetCatTitleSize()
+    local stable = StableGroups(columns, size, startY)
+    local n = gN
     local k = 0
     for g = 1, n do
         local text = gLabel[g]
@@ -922,10 +1000,29 @@ function ns.CompactBagsPlace(child, startX, startY, columns, slotIdx)
         return slotIdx, startY
     end
 
-    if not bagOut then bagOut = ns.CompactNewOut() end
+    if stable then bagOut = stable.out elseif not bagOut then bagOut = ns.CompactNewOut() end
     local out = bagOut
     local bandH = size + BAND_PAD
-    local _, _, bottomY = ns.CompactPack(gSize, gPlanW, n, columns, bandH, startY, out)
+    local bottomY
+    if stable and stable.bottom then
+        bottomY = stable.bottom
+    else
+        local _
+        _, _, bottomY = ns.CompactPack(gSize, gPlanW, stable and #stable.groups or n, columns, bandH, startY, out)
+        if stable then stable.bottom, stable.width = bottomY, out.contentW end
+    end
+    if stable and #stable.extra > 0 then
+        local top = bottomY - 8
+        local width = columns * PITCH - SPACING
+        out.groupX[n], out.groupY[n], out.groupW[n], out.labelRoom[n] = 0, top, width, width
+        for i = 1, #stable.extra do
+            local row = floor((i - 1) / columns)
+            out.cellX[stable.baseCells + i] = (i - 1 - row * columns) * PITCH
+            out.cellY[stable.baseCells + i] = top - bandH - row * PITCH
+        end
+        bottomY = top - bandH - ceil(#stable.extra / columns) * PITCH
+        out.contentW = max(stable.width or 0, width + SPACING)
+    end
     local groupX, groupY, groupW = out.groupX, out.groupY, out.groupW
 
     for g = 1, n do

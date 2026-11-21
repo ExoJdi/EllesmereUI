@@ -285,6 +285,15 @@ initFrame:SetScript("OnEvent", function(self)
             -- Slot Size | Slot Spacing | Auto-Size to Fit (not in List) |
             -- Background Color | Background Opacity | Slot Background, two per row
             local layoutSlots = {
+                { type="toggle", text="Stable Compact Positions",
+                  tooltip="Keep category slots in place until bags close. Removed items leave gaps; new items appear below in a separate block. Changing view, search or dimensions starts a new layout.",
+                  disabled=function() return BagDisplayValue() ~= "compact" end,
+                  getValue=function() return db.profile.bagCompactStable == true end,
+                  setValue=function(v)
+                      db.profile.bagCompactStable = v
+                      if BagsNS.ResetCompactSession then BagsNS.ResetCompactSession() end
+                      if _G.EUI_Bags and _G.EUI_Bags.RefreshInventory then _G.EUI_Bags:RefreshInventory() end
+                  end },
                 { type="toggle", text="Separate Subcategories",
                   tooltip="In All Items, show grouped categories and equipment sets in separate sections in Grid and Compact.",
                   getValue=function() return db.profile.bagSeparateSubcategories == true end,
@@ -552,6 +561,10 @@ initFrame:SetScript("OnEvent", function(self)
                     disabledTooltip = "Show Recent Items",
                     title = "Recent Items Options",
                     rows = {
+                        { type="toggle", label="Show recent items only on first open",
+                          tooltip="Clear the recent list when bags close. Items acquired later start a new recent list.",
+                          get=function() return db.profile.bagRecentFirstOpenOnly == true end,
+                          set=function(v) db.profile.bagRecentFirstOpenOnly = v end },
                         { type="toggle", label="Show in OneBag/MultiBag",
                           get=function() return db.profile.bagRecentInOneBag == true end,
                           set=function(v)
