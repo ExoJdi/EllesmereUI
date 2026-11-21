@@ -36,7 +36,7 @@ function CategoryManager:GetRuleFilters()
     local ts = Enum.ItemTradeGoodsSubclass or Enum.ItemTradegoodsSubclass or {}
     -- Trade-goods enums are absent on some clients; DB2 subclass IDs are stable.
     self._ruleFilters = {
-        { key="potion", name="Combat Potion", class=IC_CONSUMABLE, sub=cs.Potion or 1 },
+        { key="potion", name="Combat Potion (all potions)", class=IC_CONSUMABLE, sub=cs.Potion or 1 },
         { key="flask", name="Flask/Phial", class=IC_CONSUMABLE, sub=cs.Flasksphials or 3 },
         { key="rune", name="Augment Rune", class=IC_CONSUMABLE, rune=true },
         { key="food", name="Food", class=IC_CONSUMABLE, sub=cs.Fooddrink or 5 },

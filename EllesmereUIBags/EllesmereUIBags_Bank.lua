@@ -56,9 +56,14 @@ local function GetBankSidebarWidth()
 end
 
 local function GetFont() return EUI.GetFontPath("bags") end
+local bankFontSizes = setmetatable({}, { __mode="k" })
 local function SetBankFont(fs, size)
+    bankFontSizes[fs] = size
     EllesmereUI.PrimeFontShadow(fs, true)
     fs:SetFont(GetFont(), size, EUI.GetFontOutlineFlag("bags"))
+end
+local function RefreshBankFonts()
+    for fs, size in pairs(bankFontSizes) do SetBankFont(fs, size) end
 end
 local GetUpgradeTrack = EUI.GetUpgradeTrack
 local ITEM_CLASS_WEAPON = Enum.ItemClass.Weapon
@@ -3601,6 +3606,8 @@ eventFrame:SetScript("OnEvent", function(_, event, interaction)
         -- (left in place) carries the D-pad navigation; ours stays closed.
         if ns.PadUIStandDown() then return end
         ns.EnsureBagsStarted()
+        RefreshBankFonts()
+        bankSearch:SetFont(GetFont(), 12, EUI.IS_FOREVER and EUI.GetFontOutlineFlag("bags") or "")
         -- Detect portable warbank (AccountBanker = warband only, no character bank)
         _warbandOnly = C_PlayerInteractionManager
             and C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.AccountBanker)
