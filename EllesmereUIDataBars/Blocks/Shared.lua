@@ -254,6 +254,7 @@ local ICON_DEFAULTS = {
 -- `wow` have no stock equivalent and always show the custom art.
 local MEDIA, MM = ns.MEDIA, ns.MICROMENU_MEDIA
 local ICON_ART = {
+    fps        = { custom = "Interface\\Icons\\INV_Misc_Gear_01", wow = "Interface\\Icons\\INV_Misc_Gear_01" },
     audio      = { custom = MEDIA .. "audio.png",           wow = "Interface\\Common\\VoiceChat-Speaker" },
     bags       = { custom = MM .. "menu-bags.png",          wow = "Interface\\Buttons\\Button-Backpack-Up" },
     gold       = { custom = MM .. "menu-bags.png",          wow = "Interface\\MoneyFrame\\UI-GoldIcon" },

@@ -2132,6 +2132,15 @@ initFrame:SetScript("OnEvent", function(self)
             local isFillBlock = barMode == "auto"
                 and ns.EnsureFillBlock(cfg) == blockId
             local sizingRow
+            local alignmentCfg = { type = "dropdown", text = "Element Alignment",
+                  tooltip = "Pins elements to independent groups. Center stays centered. When any element is pinned, automatic elements pack left and sizing uses content widths.",
+                  values = { auto = "Automatic", left = "Left", center = "Center", right = "Right" },
+                  order = { "auto", "left", "center", "right" },
+                  getValue = function() return b.alignment or "auto" end,
+                  setValue = function(v)
+                      b.alignment = v ~= "auto" and v or nil
+                      Apply(); HardRefresh()
+                  end }
             if barMode == "auto" and not isFillBlock then
                 local gapLLabel, gapRLabel
                 if vertical then
@@ -2505,7 +2514,7 @@ initFrame:SetScript("OnEvent", function(self)
             end
             local bgRow
             local bgRightCfg
-            if isSpacer then bgRightCfg = { type = "label", text = "" } else bgRightCfg = colorCfg end
+            if isSpacer then bgRightCfg = alignmentCfg else bgRightCfg = colorCfg end
             bgRow, h = W:DualRow(parent, y,
                 { type = "toggle", text = "Block Background",
                   tooltip = "Tints this block's slot with its own color.",
@@ -2863,6 +2872,11 @@ initFrame:SetScript("OnEvent", function(self)
                     MkToggle("Show Only In Combat", "onlyInCombat",
                         "Shows the combat status text only while your character is in combat."),
                 }
+            elseif b.type == "fps" then
+                typeRows = {
+                    MkToggle("Show Icon", "showIcon"),
+                    MkToggle("Reaction Color", "reactionColor", "Colors the bar text using the tooltip's performance thresholds."),
+                }
             elseif b.type == "ms" then
                 typeRows = {
                     { type = "dropdown", text = "Latency",
@@ -2881,6 +2895,7 @@ initFrame:SetScript("OnEvent", function(self)
                           s.showIcon = v and true or false
                           Apply(); EllesmereUI:RefreshPage()
                       end },
+                    MkToggle("Reaction Color", "reactionColor", "Colors the bar text using the tooltip's performance thresholds."),
                 }
             elseif b.type == "location" then
                 -- Width only reaches the layout when the solver actually reads
@@ -3411,9 +3426,12 @@ initFrame:SetScript("OnEvent", function(self)
                     end }
                 if b.type ~= "micromenu" then typeRows[#typeRows + 1] = iconStyleCfg end
             end
+            if not isSpacer and b.type ~= "micromenu" then
+                typeRows[#typeRows + 1] = alignmentCfg
+            end
             for k = 1, #typeRows, 2 do
                 local rightCfg = typeRows[k + 1]
-                if not rightCfg then rightCfg = { type = "label", text = "" } end
+                if not rightCfg then rightCfg = EllesmereUI.BlankRowCfg() end
                 row, h = W:DualRow(parent, y, typeRows[k], rightCfg);  y = y - h
                 -- Travel: the first three rows hold the click dropdowns on their left.
                 if travelClickDD and k <= 5 then travelClickDD[(k + 1) / 2] = row._leftRegion._control end
@@ -3768,7 +3786,7 @@ initFrame:SetScript("OnEvent", function(self)
                           s.showGuildNotes = v and true or false
                           Apply(); EllesmereUI:RefreshPage()
                       end },
-                    EllesmereUI.BlankRowCfg());  y = y - h
+                    alignmentCfg);  y = y - h
                 if not EllesmereUI._prebuilding then
                     local rgn = notesRow._leftRegion
                     local swatch, updateSwatch = EllesmereUI.BuildColorSwatch(

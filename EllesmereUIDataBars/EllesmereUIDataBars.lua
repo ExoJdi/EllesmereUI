@@ -264,8 +264,8 @@ end
 
 ns.BLOCK_DEFAULTS = {
     clock      = { localTime = true, twentyFour = true, showMail = true, showResting = true, fontSizeClock = nil, fontSizeInfo = nil },
-    fps        = {},
-    ms         = { showIcon = false },
+    fps        = { showIcon = false, reactionColor = false },
+    ms         = { showIcon = false, reactionColor = false },
     -- widthMode/maxWidth deliberately unset: "auto" is the resolved default
     -- (ns.LocationWidthMode); nil maxWidth marks the width as never chosen,
     -- which the options page pulses about.
@@ -1628,6 +1628,42 @@ function ns.SolveLayout(barCfg, L, measure)
     local segs = {}
     local n = #barCfg.blocks
     if n == 0 then return segs end
+
+    local pinned = false
+    for i = 1, n do
+        local a = barCfg.blocks[i].alignment
+        if a == "left" or a == "center" or a == "right" then pinned = true break end
+    end
+    if pinned then
+        local groups = { left = {}, center = {}, right = {} }
+        local widths = { left = 0, center = 0, right = 0 }
+        for i = 1, n do
+            local b = barCfg.blocks[i]
+            local a = groups[b.alignment] and b.alignment or "left"
+            local w = b.type ~= "spacer" and measure and (measure(b) or 0) or 0
+            local gl, gr = ContentGapsOf(b)
+            local px = (w > 0 or b.type == "spacer") and (w + gl + gr) or 0
+            local s = { block = b, at = 0, px = px }
+            segs[i] = s
+            groups[a][#groups[a] + 1] = s
+            widths[a] = widths[a] + px
+        end
+        local needed = widths.center + 2 * max(widths.left, widths.right)
+        if widths.center == 0 then needed = widths.left + widths.right end
+        local scale = needed > L and L / needed or 1
+        for _, a in ipairs({ "left", "center", "right" }) do
+            local at = 0
+            if a == "center" then at = (L - widths.center * scale) / 2
+            elseif a == "right" then at = L - widths.right * scale end
+            for _, s in ipairs(groups[a]) do
+                local edge = floor(at + s.px * scale + 0.5)
+                s.at = floor(at + 0.5)
+                s.px = edge - s.at
+                at = edge
+            end
+        end
+        return segs
+    end
 
     if ns.BarSizingMode(barCfg) == "even" then
         -- Equal shares among blocks that exist for layout: a collapsed block
