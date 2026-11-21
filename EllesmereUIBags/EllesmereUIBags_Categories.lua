@@ -3,8 +3,7 @@ if EUI_CLIENT_BLOCKED then return end -- pre-12.1 client failsafe (EllesmereUI_C
 --  EllesmereUIBags_Categories.lua
 --  Category system based on Enum.ItemClass numeric IDs (locale-safe).
 --  Categories are hardcoded definitions. Users can rename, reorder, group,
---  turn off and change the icon of them via sidebar context menus. Type rules
---  are not customizable.
+--  turn off and change the icon of them via sidebar context menus.
 -------------------------------------------------------------------------------
 
 local CategoryManager = {}
@@ -30,6 +29,68 @@ local IC_QUEST         = IC.Questitem        -- 12
 local IC_MISC          = IC.Miscellaneous    -- 15
 local IC_PROFESSION    = 19                  -- Enum.ItemClass.Profession (Midnight)
 local IC_HOUSING       = 20                  -- Enum.ItemClass.Housing (Midnight)
+
+function CategoryManager:GetRuleFilters()
+    if self._ruleFilters then return self._ruleFilters end
+    local cs = Enum.ItemConsumableSubclass or {}
+    local ts = Enum.ItemTradeGoodsSubclass or Enum.ItemTradegoodsSubclass or {}
+    -- Trade-goods enums are absent on some clients; DB2 subclass IDs are stable.
+    self._ruleFilters = {
+        { key="potion", name="Combat Potion (all potions)", class=IC_CONSUMABLE, sub=cs.Potion or 1 },
+        { key="flask", name="Flask/Phial", class=IC_CONSUMABLE, sub=cs.Flasksphials or 3 },
+        { key="rune", name="Augment Rune", class=IC_CONSUMABLE, rune=true },
+        { key="food", name="Food", class=IC_CONSUMABLE, sub=cs.Fooddrink or 5 },
+        { key="herb", name="Herb", class=IC_TRADESKILL, sub=ts.Herb or 9 },
+        { key="metal", name="Metal & Stone", class=IC_TRADESKILL, sub=ts.MetalStone or 7 },
+        { key="cloth", name="Cloth", class=IC_TRADESKILL, sub=ts.Cloth or 5 },
+        { key="leather", name="Leather", class=IC_TRADESKILL, sub=ts.Leather or 6 },
+        { key="enchanting", name="Enchanting", class=IC_TRADESKILL, sub=ts.Enchanting or 12 },
+        { key="elemental", name="Elemental/Orb", class=IC_TRADESKILL, sub=ts.Elemental or 10 },
+        { key="cooking", name="Cooking", class=IC_TRADESKILL, sub=ts.Meat or 8 },
+        { key="parts", name="Parts", class=IC_TRADESKILL, sub=ts.Parts or 1 },
+        { key="jewelcrafting", name="Jewelcrafting", class=IC_TRADESKILL, sub=ts.Jewelcrafting or 4 },
+        { key="inscription", name="Inscription", class=IC_TRADESKILL, sub=ts.Inscription or 16 },
+    }
+    return self._ruleFilters
+end
+
+function CategoryManager:UpdateRuleCategories(cats)
+    self._hasRuleCategories = nil
+    self._hasHiddenEmptyCategories = nil
+    for _, cat in ipairs(cats) do
+        if cat.isUserCreated and cat.hideWhenEmpty then self._hasHiddenEmptyCategories = true end
+        if cat.isUserCreated and cat.filters and next(cat.filters) then
+            self._hasRuleCategories = true
+        end
+    end
+end
+
+function CategoryManager:MatchesRules(cat, classID, subID, itemLink)
+    if not cat.filters then return false end
+    for _, rule in ipairs(self:GetRuleFilters()) do
+        if cat.filters[rule.key] and classID == rule.class then
+            if rule.rune then
+                -- Augment runes share their subclass with unrelated consumables.
+                local prep = EUI.RAID_PREP_IDS
+                local _, spell = C_Item.GetItemSpell(itemLink)
+                if prep and spell then
+                    for _, id in ipairs(prep.rune or {}) do if spell == id then return true end end
+                    for _, id in ipairs(prep.oldRune or {}) do if spell == id then return true end end
+                end
+            elseif subID == rule.sub then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function CategoryManager:DisplayName(cat, name)
+    name = name or cat.name
+    local c = cat.color
+    if not c then return name end
+    return string.format("|cff%02x%02x%02x%s|r", c.r * 255, c.g * 255, c.b * 255, name)
+end
 
 -- Hardcoded category definitions. Order here is the default order.
 -- types = list of Enum.ItemClass numeric IDs to match
@@ -263,6 +324,9 @@ function CategoryManager:InitCategories()
                     icon          = ucIcon,
                     isAtlas       = ucIsAtlas or nil,
                     isUserCreated = true,
+                    filters       = uc.filters,
+                    hideWhenEmpty = uc.hideWhenEmpty,
+                    color         = uc.color,
                     groupName     = ucState and ucState.groupName,
                     groupNameCustom = ucState and ucState.groupNameCustom,
                 }
@@ -360,6 +424,9 @@ function CategoryManager:InitCategories()
                     icon          = ucIcon,
                     isAtlas       = ucIsAtlas or nil,
                     isUserCreated = true,
+                    filters       = uc.filters,
+                    hideWhenEmpty = uc.hideWhenEmpty,
+                    color         = uc.color,
                     groupName     = ucState and ucState.groupName,
                     groupNameCustom = ucState and ucState.groupNameCustom,
                 })
@@ -385,6 +452,7 @@ function CategoryManager:InitCategories()
     end
 
     self._categories = cats
+    self:UpdateRuleCategories(cats)
 
     -- setID -> category index, for split-mode classification. The same pass
     -- notes whether any category carries a fixed item list, so ClassifyItem
@@ -416,6 +484,7 @@ function CategoryManager:SaveState()
     if Lite and Lite.IsDBReady and not Lite.IsDBReady() then return end
     local cats = self._categories
     if not cats then return end
+    self:UpdateRuleCategories(cats)
 
     local userState = {}
     local userOrder = {}
@@ -474,7 +543,8 @@ function CategoryManager:SaveState()
     local ucList = {}
     for _, cat in ipairs(cats) do
         if cat.isUserCreated then
-            ucList[#ucList + 1] = { key = cat._defaultName, name = cat._defaultName, icon = cat.icon }
+            ucList[#ucList + 1] = { key = cat._defaultName, name = cat._defaultName, icon = cat.icon,
+                filters = cat.filters, hideWhenEmpty = cat.hideWhenEmpty, color = cat.color }
         end
     end
     BP().bagUserCategories = #ucList > 0 and ucList or nil
@@ -683,13 +753,19 @@ function CategoryManager:ClassifyItem(itemLink, itemID, bag, slot, quality, sepa
     end
 
     -- Get classID + equip slot via GetItemInfoInstant (locale-safe numeric IDs)
-    local _, _, _, equipSlot, _, classID = GetItemInfoInstant(itemLink)
+    local _, _, _, equipSlot, _, classID, subID = GetItemInfoInstant(itemLink)
     if not classID then
         -- Item data not available; classify as catch-all for now
         for i, cat in ipairs(cats) do
             if cat.isCatchAll then return i end
         end
         return #cats
+    end
+
+    if self._hasRuleCategories then
+        for i, cat in ipairs(cats) do
+            if cat.isUserCreated and self:MatchesRules(cat, classID, subID, itemLink) then return i end
+        end
     end
 
     -- Equipment set gear check: if item is Armor/Weapon AND in an equipment set,

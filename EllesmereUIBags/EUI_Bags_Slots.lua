@@ -360,6 +360,15 @@ local function GetOrCreateBagSlot(idx)
     return btn
 end
 
+function ns.RefreshHoveredBagTooltip()
+    if not (MerchantFrame and MerchantFrame:IsShown()) or GameTooltip:IsShown() then return end
+    local btn = ns.SelectSlotUnderCursor(false)
+    if btn then
+        local enter = btn:GetScript("OnEnter")
+        if enter then enter(btn) end
+    end
+end
+
 -------------------------------------------------------------------------------
 --  Fast font size update (options sliders): no full RefreshInventory
 -------------------------------------------------------------------------------
