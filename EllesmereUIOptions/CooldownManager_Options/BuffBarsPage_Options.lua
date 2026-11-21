@@ -4172,7 +4172,31 @@ local function InitBuffBarsPage(PP, DB, Refresh, FONT_PATH, GetCDMOptOutline, Ga
               } }
         );  y = y - h
 
-        -- Fill Color (dropdown: auto/custom + gradient mode + 2 inline swatches) | Show Spark
+        local powerValues, powerOrder = {}, {}
+        for key in pairs(EllesmereUI.DEFAULT_POWER_COLORS) do powerValues[key] = key; powerOrder[#powerOrder + 1] = key end
+        table.sort(powerOrder)
+        _, h = W:DualRow(parent, y,
+            EllesmereUI.BlizzStyle.Gate("cdmbars", { type="dropdown", text="Fill Color Source",
+              values={ custom="Custom Color", class="Class Color", power="Power Color" },
+              order={ "custom", "class", "power" },
+              getValue=function()
+                  local bd = SelectedTBB()
+                  local mode = bd and bd.fillColorMode
+                  return (mode == "class" or mode == "power") and mode or "custom"
+              end,
+              setValue=function(v)
+                  local bd = SelectedTBB(); if not bd then return end
+                  bd.fillColorMode = v; RefreshTBB(); EllesmereUI:RefreshPage()
+              end }),
+            EllesmereUI.BlizzStyle.Gate("cdmbars", { type="dropdown", text="Power Color Type", values=powerValues, order=powerOrder,
+              disabled=function() local bd = SelectedTBB(); return not bd or bd.fillColorMode ~= "power" end,
+              getValue=function()
+                  local bd = SelectedTBB()
+                  return bd and bd.fillPowerType or EllesmereUI.CLASS_POWER_MAP[select(2, UnitClass("player"))] or "MANA"
+              end,
+              setValue=function(v) local bd = SelectedTBB(); if bd then bd.fillPowerType = v; RefreshTBB() end end })); y = y - h
+
+        -- Fill Color (gradient mode + 2 inline swatches) | Show Spark
         local fillRow
         fillRow, h = W:DualRow(parent, y,
             EllesmereUI.BlizzStyle.Gate("cdmbars", { type = "dropdown", text = "Fill Color",
@@ -4190,7 +4214,7 @@ local function InitBuffBarsPage(PP, DB, Refresh, FONT_PATH, GetCDMOptOutline, Ga
               end,
               setValue = function(v)
                   local bd = SelectedTBB(); if not bd then return end
-                  bd.fillColorMode = "custom"
+                  if bd.fillColorMode ~= "class" and bd.fillColorMode ~= "power" then bd.fillColorMode = "custom" end
                   if v == "none" then
                       bd.gradientEnabled = false
                   else

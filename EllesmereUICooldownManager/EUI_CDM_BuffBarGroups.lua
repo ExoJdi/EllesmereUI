@@ -887,7 +887,7 @@ local TBB_STYLE_KEYS = {
     "chargeHashLineR", "chargeHashLineG", "chargeHashLineB", "chargeHashLineA",
     "chargeHashShade", "chargeHashShadeAlpha",
     "texture", "strata",
-    "fillColorMode", "fillR", "fillG", "fillB", "fillA",
+    "fillColorMode", "fillPowerType", "fillR", "fillG", "fillB", "fillA",
     "bgR", "bgG", "bgB", "bgA",
     "gradientEnabled", "gradientR", "gradientG", "gradientB", "gradientA", "gradientDir",
     "opacity", "hideWhenInactive", "onlyInCombat",

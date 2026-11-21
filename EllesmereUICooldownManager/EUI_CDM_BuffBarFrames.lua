@@ -792,8 +792,25 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
     local fG = cfg.fillG or _classG
     local fB = cfg.fillB or _classB
     local fA = cfg.fillA or 1
+    local gR, gG, gB = cfg.gradientR or 0.20, cfg.gradientG or 0.20, cfg.gradientB or 0.80
+    if cfg.fillColorMode == "class" or cfg.fillColorMode == "power" then
+        local class = select(2, UnitClass("player"))
+        local key = cfg.fillColorMode == "class" and class or cfg.fillPowerType or EllesmereUI.CLASS_POWER_MAP[class] or "MANA"
+        local color
+        if cfg.fillColorMode == "class" then color = EllesmereUI.GetClassColor(key)
+        else
+            if type(key) == "number" then key = EllesmereUI.POWER_ENUM_TO_KEY[key] end
+            color = key and EllesmereUI.GetPowerColor(key)
+        end
+        if color then fR, fG, fB = color.r, color.g, color.b end
+        if cfg.gradientEnabled then
+            local first, last = EllesmereUI.GetGradientColors(cfg.fillColorMode, key)
+            if first then fR, fG, fB, gR, gG, gB = first.r, first.g, first.b, last.r, last.g, last.b end
+        end
+    end
     fillTex:SetVertexColor(fR, fG, fB, fA)
     bar._baseFillR, bar._baseFillG, bar._baseFillB, bar._baseFillA = fR, fG, fB, fA
+    bar._baseGradientR, bar._baseGradientG, bar._baseGradientB = gR, gG, gB
 
     -- Background
     if blizzBar and not classicBar then
@@ -817,7 +834,8 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
     if classicBar then ns.ApplyTBBClassicChrome(bar, sb, isVert, isVert and w or h, cfg.stockBorderScale) end
 
     -- Gradient (an EUI-look effect; the stock styles keep their flat fill)
-    if cfg.gradientEnabled and not blizzBar then
+    if cfg.gradientEnabled and not blizzBar and not EllesmereUI.IsSecretColor(fR, fG, fB, fA)
+       and not EllesmereUI.IsSecretColor(gR, gG, gB, cfg.gradientA) then
         local dir = cfg.gradientDir or "HORIZONTAL"
         fillTex:SetVertexColor(1, 1, 1, 0)
         if not bar._gradClip then
@@ -836,7 +854,7 @@ local function ApplyTrackedBuffBarSettings(bar, cfg)
         bar._gradTex:SetVertexColor(1, 1, 1, 1)
         bar._gradTex:SetGradient(dir,
             CreateColor(fR, fG, fB, fA),
-            CreateColor(cfg.gradientR or 0.20, cfg.gradientG or 0.20, cfg.gradientB or 0.80, cfg.gradientA or 1))
+            CreateColor(gR, gG, gB, cfg.gradientA or 1))
         bar._gradClip:Show()
         bar._gradientActive = true
     else

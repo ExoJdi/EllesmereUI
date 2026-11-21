@@ -123,7 +123,8 @@ end
 -- tables), so a spec-switch colour wipe cannot happen. Missing tables -> defaults.
 EllesmereUI.COLOR_SECTIONS = { "class", "power", "classResource" }
 EllesmereUI._COLOR_SECTION_OF = { class = "class", power = "power",
-    classResource = "classResource", resource = "classResource" }
+    classResource = "classResource", resource = "classResource",
+    classGradients = "class", powerGradients = "power", classResourceGradients = "classResource" }
 -- The palette GetCustomColorsDB hands out: its four category fields are the LIVE
 -- tables of each section's source profile, so in-place writes (db.class[token] = c)
 -- land where the section resolves and a DeepCopy of it is the effective palette.
@@ -371,6 +372,27 @@ function EllesmereUI._RebuildColorCache()
     EllesmereUI._BuildColorPalette(cache.power,          EllesmereUI.DEFAULT_POWER_COLORS,          cc and cc.power,          dm and dm.powerDarken)
     EllesmereUI._BuildColorPalette(cache.classResource,  EllesmereUI.DEFAULT_CLASS_RESOURCE_COLORS, cc and cc.classResource,  dm and dm.resourceDarken)
     EllesmereUI._BuildColorPalette(cache.resource,       EllesmereUI.DEFAULT_RESOURCE_COLORS,       cc and cc.resource,       dm and dm.resourceDarken)
+    EllesmereUI._paletteGradients = dm.paletteGradients == true
+    EllesmereUI._darkGradients = dm.darkGradients == true
+    EllesmereUI._resourceGradients = dm.resourceGradients == true and EllesmereUI._paletteGradients
+    EllesmereUI._resourceGradientDir = dm.resourceGradientDir or "HORIZONTAL"
+    EllesmereUI._seriesSettings = dm.resourceSeries == true and dm or nil
+    EllesmereUI._gradientPalettes = nil
+    if EllesmereUI._paletteGradients then
+        local palettes = {}
+        for _, category in ipairs(EllesmereUI.COLOR_SECTIONS) do
+            local out, custom = {}, cc[category .. "Gradients"]
+            for key, base in pairs(cache[category]) do
+                local entry = custom and custom[key]
+                out[key] = {
+                    start = entry and entry.start or base,
+                    finish = entry and entry.finish or { r=base.r * 0.6, g=base.g * 0.6, b=base.b * 0.6 },
+                }
+            end
+            palettes[category] = out
+        end
+        EllesmereUI._gradientPalettes = palettes
+    end
     -- BG Power Color Darken: extra blacken for power-COLORED bar backgrounds, kept as a multiplier (not a palette) so it stacks on whatever power color a consumer resolved.
     local bgd = (dm and dm.powerBgDarken) or 0
     EllesmereUI._powerBgDarkenFactor = bgd > 0 and math.max(0, 1 - bgd / 100) or 1
@@ -389,6 +411,63 @@ function EllesmereUI._RebuildColorCache()
     EllesmereUI._restrictedCandidatesDirty = true
     EllesmereUI._colorCacheDirty = false
 end
+
+function EllesmereUI.GradientsInDarkMode()
+    if EllesmereUI._colorCacheDirty then EllesmereUI._RebuildColorCache() end
+    return EllesmereUI._darkGradients
+end
+
+function EllesmereUI.GetGradientColors(category, key)
+    if EllesmereUI._colorCacheDirty then EllesmereUI._RebuildColorCache() end
+    if not EllesmereUI._paletteGradients then return nil end
+    if issecretvalue and issecretvalue(key) then return nil end
+    if category == "power" and type(key) == "number" then key = EllesmereUI.POWER_ENUM_TO_KEY[key] end
+    local palette = EllesmereUI._gradientPalettes[category]
+    local entry = palette and key and palette[key]
+    if entry then return entry.start, entry.finish end
+end
+
+function EllesmereUI.IsSecretColor(r, g, b, a)
+    return issecretvalue and (issecretvalue(r) or issecretvalue(g) or issecretvalue(b) or issecretvalue(a))
+end
+
+function EllesmereUI.UnitGradientKey(unit, classColor)
+    if classColor then return select(2, UnitClass(unit)) end
+    if unit == "player" and EllesmereUI.GetPlayerPowerOverride then
+        local override = EllesmereUI.GetPlayerPowerOverride()
+        if override ~= nil then return override end
+    end
+    local id, token = UnitPowerType(unit)
+    if issecretvalue and issecretvalue(token) then return id end
+    return token or id
+end
+
+EllesmereUI.DEFAULT_RESOURCE_SERIES = {
+    { r=0.5, g=0.5, b=0.5 }, { r=1, g=0.82, b=0 },
+    { r=0.1, g=1, b=0.1 }, { r=1, g=0.1, b=0.1 },
+}
+function EllesmereUI.GetResourceSeriesColor(count)
+    if EllesmereUI._colorCacheDirty then EllesmereUI._RebuildColorCache() end
+    local settings = EllesmereUI._seriesSettings
+    if not settings or (issecretvalue and issecretvalue(count)) or type(count) ~= "number" then return nil end
+    local band = 4
+    if count <= (settings.seriesLow or 2) then band = 1
+    elseif count <= (settings.seriesMid or 4) then band = 2
+    elseif count <= (settings.seriesHigh or 5) then band = 3 end
+    return settings.seriesColors and settings.seriesColors[band] or EllesmereUI.DEFAULT_RESOURCE_SERIES[band]
+end
+
+function EllesmereUI.ResourceGradientKey(powerType, class)
+    local key = EllesmereUI.RESOURCE_GRADIENT_KEYS[powerType]
+    return key or EllesmereUI.CLASS_RESOURCE_MAP[class]
+end
+EllesmereUI.RESOURCE_GRADIENT_KEYS = {
+    [1] = "RAGE", [2] = "FOCUS", [4] = "ComboPoints", [5] = "Runes", [7] = "SoulShards",
+    [9] = "HolyPower", [12] = "Chi", [16] = "ArcaneCharges", [19] = "Essence",
+    ICICLES = "Icicles", MAELSTROM_WEAPON = "MaelstromWeapon",
+    SOUL_FRAGMENTS_VENGEANCE = "SoulFragments", SOUL_FRAGMENTS_DEVOURER = "SoulFragments",
+    TIP_OF_THE_SPEAR = "TipOfTheSpear", WHIRLWIND_STACKS = "WhirlwindStacks", SWEEPING_STRIKES = "SweepingStrikes",
+}
 
 -- Modules register a callback re-reading the dark palette and repainting their frames; RefreshDarkMode() runs them all and re-pushes class/power colours via ApplyColorsToOUF.
 EllesmereUI._darkModeRefreshers = EllesmereUI._darkModeRefreshers or {}

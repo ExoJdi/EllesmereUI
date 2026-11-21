@@ -1574,7 +1574,9 @@ ReloadFramesBody = function()
                         if ga > 1.0 then ga = ga / 100 end
                         ApplyBarGradient(self:GetStatusBarTexture(), s2.powerGradientDir or "HORIZONTAL",
                             bR, bG, bB, ga,
-                            gc and gc.r or 0.20, gc and gc.g or 0.20, gc and gc.b or 0.80, ga)
+                            gc and gc.r or 0.20, gc and gc.g or 0.20, gc and gc.b or 0.80, ga,
+                            useP and (s2.powerClassColored and "class" or "power") or nil,
+                            EllesmereUI._paletteGradients and EllesmereUI.UnitGradientKey(unit, s2.powerClassColored))
                     elseif not useP then
                         local cf = s2.customPowerFillColor
                         if cf then self:SetStatusBarColor(cf.r, cf.g, cf.b) else self:SetStatusBarColor(0, 0, 1) end

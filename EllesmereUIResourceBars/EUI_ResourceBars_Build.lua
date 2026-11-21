@@ -472,7 +472,8 @@ local function BuildBars()
             if hp.gradientEnabled then
                 ApplyBarGradient(hft, hp.gradientDir or "HORIZONTAL",
                     fR, fG, fB, fA,
-                    hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA)
+                    hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA,
+                    not hp.customColored and "class" or nil, cachedClass)
             else
                 ApplyBarFlat(hft, fR, fG, fB, fA)
             end
@@ -671,7 +672,8 @@ local function BuildBars()
             if pp.gradientEnabled then
                 ApplyBarGradient(pft, pp.gradientDir or "HORIZONTAL",
                     fR, fG, fB, fA,
-                    pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA)
+                    pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA,
+                    not pp.customColored and "power" or nil, cachedPrimary)
             else
                 ApplyBarFlat(pft, fR, fG, fB, fA)
             end

@@ -402,8 +402,9 @@ function ns.UpdateTrackedBuffBarTimers()
                         end
                         if blizzFillTex then
                             local br, bg, bb, ba = blizzFillTex:GetVertexColor()
-                            if br then
-                                if bar._gradientActive and bar._gradTex then
+                            local secretColor = EllesmereUI.IsSecretColor(br, bg, bb, ba)
+                            if secretColor or br ~= nil then
+                                if bar._gradientActive and bar._gradTex and not secretColor then
                                     local c1 = bar._gradColor1 or CreateColor(0,0,0,1)
                                     local c2 = bar._gradColor2 or CreateColor(0,0,0,1)
                                     bar._gradColor1 = c1
@@ -411,13 +412,20 @@ function ns.UpdateTrackedBuffBarTimers()
                                     c1.r, c1.g, c1.b, c1.a = br, bg, bb, ba or 1
                                     c2.r, c2.g, c2.b, c2.a = cfg.gradientR or 0.20, cfg.gradientG or 0.20, cfg.gradientB or 0.80, cfg.gradientA or 1
                                     bar._gradTex:SetGradient(cfg.gradientDir or "HORIZONTAL", c1, c2)
+                                    local fill = bar._cachedOurFillTex
+                                    if fill then fill:SetVertexColor(1, 1, 1, 0) end
+                                    bar._gradClip:Show()
                                 else
+                                    if secretColor and bar._gradClip then bar._gradClip:Hide() end
                                     local ourFillTex = bar._cachedOurFillTex
                                     if not ourFillTex then
                                         ourFillTex = sb:GetStatusBarTexture()
                                         bar._cachedOurFillTex = ourFillTex
                                     end
-                                    if ourFillTex then ourFillTex:SetVertexColor(br, bg, bb, ba or 1) end
+                                    if ourFillTex then
+                                        if secretColor then ourFillTex:SetVertexColor(br, bg, bb, ba)
+                                        else ourFillTex:SetVertexColor(br, bg, bb, ba or 1) end
+                                    end
                                 end
                             end
                         end

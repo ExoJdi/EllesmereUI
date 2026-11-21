@@ -128,7 +128,16 @@ local empowerColorB = CreateColor(1, 0, 0, 1)
 local _gradColorA = CreateColor(1, 1, 1, 1)
 local _gradColorB = CreateColor(1, 1, 1, 1)
 
-local function ApplyBarGradient(ft, dir, br, bg, bb, ba, er, eg, eb, ea)
+local function ApplyBarGradient(ft, dir, br, bg, bb, ba, er, eg, eb, ea, category, key)
+    if EllesmereUI.IsSecretColor(br, bg, bb, ba) or EllesmereUI.IsSecretColor(er, eg, eb, ea) then
+        (ft._erbSetVC or ft.SetVertexColor)(ft, br, bg, bb, ba)
+        ft._lgOn, ft._lfOn = nil, nil
+        return
+    end
+    if category and EllesmereUI._paletteGradients then
+        local first, last = EllesmereUI.GetGradientColors(category, key)
+        if first then br, bg, bb, er, eg, eb = first.r, first.g, first.b, last.r, last.g, last.b end
+    end
     -- Bar colour only changes on a config edit or threshold/band crossing, but this
     -- runs on every power/health event, so skip when inputs (plus the fill-opacity
     -- multiplier scaling the alphas below) are unchanged -- else four C calls

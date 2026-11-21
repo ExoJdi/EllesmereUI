@@ -148,7 +148,8 @@ local function UpdateHealthBar()
             if hp.gradientEnabled then
                 ApplyBarGradient(ft, hp.gradientDir or "HORIZONTAL",
                     baseR, baseG, baseB, 1,
-                    hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA)
+                    hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA,
+                    not hp.customColored and "class" or nil, cachedClass)
             else
                 ApplyBarFlat(ft, baseR, baseG, baseB, 1)
             end
@@ -175,7 +176,7 @@ local function UpdateHealthBar()
         if hp.gradientEnabled then
             ApplyBarGradient(ft, hp.gradientDir or "HORIZONTAL",
                 r, g, b, 1,
-                hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA)
+                hp.gradientR, hp.gradientG, hp.gradientB, hp.gradientA, "class", cachedClass)
         else
             ApplyBarFlat(ft, r, g, b, 1)
         end
@@ -286,7 +287,7 @@ local function UpdatePrimaryBar()
                 if pc then r, g, b = pc[1], pc[2], pc[3] end
                 if pp.gradientEnabled then
                     ApplyBarGradient(ft, pp.gradientDir or "HORIZONTAL", r, g, b, 1,
-                        pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA)
+                        pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA, "power", "EBON_MIGHT")
                 else
                     ApplyBarFlat(ft, r, g, b, 1)
                 end
@@ -441,7 +442,8 @@ local function UpdatePrimaryBar()
                 if pp.gradientEnabled then
                     ApplyBarGradient(ft, pp.gradientDir or "HORIZONTAL",
                         baseR, baseG, baseB, 1,
-                        pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA)
+                        pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA,
+                        not pp.customColored and "power" or nil, cachedPrimary)
                 else
                     ApplyBarFlat(ft, baseR, baseG, baseB, 1)
                 end
@@ -470,7 +472,7 @@ local function UpdatePrimaryBar()
             if pp.gradientEnabled then
                 ApplyBarGradient(ft, pp.gradientDir or "HORIZONTAL",
                     r, g, b, 1,
-                    pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA)
+                    pp.gradientR, pp.gradientG, pp.gradientB, pp.gradientA, "power", cachedPrimary)
             else
                 ApplyBarFlat(ft, r, g, b, 1)
             end
@@ -1479,6 +1481,8 @@ local function UpdateSecondaryResource()
         local _runeTI = _spTextInstead and sp.runesSimple
         local _runeTiTrig = runeUseThresh and true or false
         if _runeTI then runeUseThresh = false end
+        local series = EllesmereUI._seriesSettings and EllesmereUI.GetResourceSeriesColor(readyN)
+        if series and not runeUseThresh and not _buffActive then r, g, b = series.r, series.g, series.b end
 
         if sp.runesSimple then
             -- Simple mode: flat pips like Holy Power (active/inactive, no recharge animation)
@@ -1518,6 +1522,15 @@ local function UpdateSecondaryResource()
                         end
                     else
                         rf:SetActive(active, r, g, b, a)
+                    end
+                    if active and EllesmereUI._resourceGradients and not series and not runeUseThresh and not _buffActive
+                       and not sp.darkTheme and (sp.resourceColored or sp.classColored ~= false) then
+                        local first, last = EllesmereUI.GetGradientColors("classResource", "Runes")
+                        if first then
+                            rf._fill._lgOn = nil
+                            ApplyBarGradient(rf._fill, EllesmereUI._resourceGradientDir,
+                                first.r, first.g, first.b, a, last.r, last.g, last.b, a)
+                        end
                     end
                     if rf._rechargeBar then rf._rechargeBar:Hide() end
                     if rf._cdText then rf._cdText:SetText("") end
@@ -1596,6 +1609,15 @@ local function UpdateSecondaryResource()
                             end
                         else
                             rf:SetActive(true, r, g, b, a)
+                        end
+                        if EllesmereUI._resourceGradients and not series and not runeUseThresh and not _buffActive
+                           and not sp.darkTheme and (sp.resourceColored or sp.classColored ~= false) then
+                            local first, last = EllesmereUI.GetGradientColors("classResource", "Runes")
+                            if first then
+                                rf._fill._lgOn = nil
+                                ApplyBarGradient(rf._fill, EllesmereUI._resourceGradientDir,
+                                    first.r, first.g, first.b, a, last.r, last.g, last.b, a)
+                            end
                         end
                         if rf._rechargeBar then rf._rechargeBar:Hide() end
                         if rf._cdText then rf._cdText:SetText("") end
@@ -2391,6 +2413,8 @@ local function UpdateSecondaryResource()
             -- "Recolor text instead of bar": keep pips at base, route to the text.
             local _tiTrig = useThresh and true or false
             if _spTextInstead then useThresh = false end
+            local series = EllesmereUI._seriesSettings and EllesmereUI.GetResourceSeriesColor(_enhRealCur)
+            if series and not useThresh and not _buffActive then r, g, b = series.r, series.g, series.b end
             for i = 1, maxC do
                 if pips[i] and pips[i]:IsShown() then
                     local active = i <= cur
@@ -2412,6 +2436,16 @@ local function UpdateSecondaryResource()
                         end
                     else
                         pips[i]:SetActive(active, r, g, b, a)
+                    end
+                    if active and EllesmereUI._resourceGradients and not series and not useThresh and not _buffActive
+                       and not sp.darkTheme and (sp.resourceColored or sp.classColored ~= false) then
+                        local key = EllesmereUI.ResourceGradientKey(powerType, cachedClass)
+                        local first, last = EllesmereUI.GetGradientColors("classResource", key)
+                        if first then
+                            pips[i]._fill._lgOn = nil
+                            ApplyBarGradient(pips[i]._fill, EllesmereUI._resourceGradientDir,
+                                first.r, first.g, first.b, a, last.r, last.g, last.b, a)
+                        end
                     end
                 end
             end
@@ -2521,6 +2555,8 @@ local function UpdateSecondaryResource()
             end
         end
         local cr, cg, cb, ca = sp.chargedR or 0.44, sp.chargedG or 0.77, sp.chargedB or 1.00, sp.chargedA or 1
+        local series = EllesmereUI._seriesSettings and EllesmereUI.GetResourceSeriesColor(cur)
+        if series and not useThresh and not _buffActive then r, g, b = series.r, series.g, series.b end
 
         for i = 1, maxPts do
             if pips[i] and pips[i]:IsShown() then
@@ -2539,6 +2575,17 @@ local function UpdateSecondaryResource()
                     end
                 else
                     pips[i]:SetActive(active, r, g, b, a)
+                end
+                if active and EllesmereUI._resourceGradients and not series and not useThresh and not _buffActive
+                   and not (chargedSet and chargedSet[i]) and not sp.darkTheme
+                   and (sp.resourceColored or sp.classColored ~= false) then
+                    local key = EllesmereUI.ResourceGradientKey(powerType, cachedClass)
+                    local first, last = EllesmereUI.GetGradientColors("classResource", key)
+                    if first then
+                        pips[i]._fill._lgOn = nil
+                        ApplyBarGradient(pips[i]._fill, EllesmereUI._resourceGradientDir,
+                            first.r, first.g, first.b, a, last.r, last.g, last.b, a)
+                    end
                 end
                 -- Hide any leftover partial-fill overlay on non-fractional pips
                 if pips[i]._rechargeBar then pips[i]._rechargeBar:Hide() end
