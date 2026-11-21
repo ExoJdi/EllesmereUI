@@ -99,6 +99,9 @@ local function MakeStatBlock(blockCfg, slot, content, barCtx, opts)
             r, g, b = ns.GetAccent()
         else
             r, g, b = BlockColorOf(blockCfg)
+            if D().reactionColor and opts.reactionColor then
+                r, g, b = opts.reactionColor(lastVal)
+            end
         end
         text:SetTextColor(r, g, b, 1)
         if icon then
@@ -126,7 +129,7 @@ local function MakeStatBlock(blockCfg, slot, content, barCtx, opts)
         if icon then
             K.SetBlockIcon(icon, blockCfg)
         end
-        if icon and d.showIcon ~= false then
+        if icon and d.showIcon ~= false and (not opts.iconDefaultOff or d.showIcon == true) then
             iconSz = fontSize + (opts.iconExtra or 0)
         end
 
@@ -348,6 +351,9 @@ ns.BlockFactories.fps = function(blockCfg, slot, content, barCtx)
 
     return MakeStatBlock(blockCfg, slot, content, barCtx, {
         hbPrefix = "fps",
+        hasIcon  = true,
+        iconDefaultOff = true,
+        reactionColor = GetFPSColor,
         interval = 3,
         sample   = function() return floor(GetFramerate()) end,
         suffix   = function() return ns.GetFPSSuffix() end,
@@ -369,7 +375,7 @@ end
 
 -- LATENCY. Own factory, not MakeStatBlock: shows one OR two links (home/world/both), each
 -- with its own house/globe icon, which the single-icon stat helper cannot do. Bar keeps the
--- block color; green/yellow/red criticality is tooltip-only (GetLatColor).
+-- block color unless reaction colors are enabled (GetLatColor).
 
 -- home | world | both. Falls back to the useWorldLatency boolean. Shared by the block and its options row, which must agree on what "selected" means.
 function ns.LatencyMode(s)
@@ -448,7 +454,11 @@ ns.BlockFactories.ms = function(blockCfg, slot, content, barCtx)
                 ns.SetFont(s.text, fontSize, barCfg)
                 ns.ResetInlineText(s.text, "LEFT")
                 s.text:SetText(vals[link] .. suffix)
-                s.text:SetTextColor(tr, tg, tb, 1)
+                if D().reactionColor and not mouseOver then
+                    s.text:SetTextColor(GetLatColor(vals[link]))
+                else
+                    s.text:SetTextColor(tr, tg, tb, 1)
+                end
                 s.text:Show()
                 if showIcon then
                     K.SetBlockIcon(s.icon, blockCfg, link)
