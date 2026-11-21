@@ -27,6 +27,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
     local _GameTooltip = GameTooltip
     local _RAID_CC = RAID_CLASS_COLORS
     local _nameL1 = nil  -- cached ref to GameTooltipTextLeft1
+    local _ttExtras = {}
 
     local function _enabled()
         return not EllesmereUIDB or EllesmereUIDB.customTooltips ~= false
@@ -64,7 +65,8 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         elseif mode == "accent" then
             color = EllesmereUI.ELLESMERE_GREEN or { r=.27, g=.86, b=.49 }
         elseif mode == "class" then
-            local _, class = UnitClass("player")
+            local _, class
+            if prefix ~= "tooltip" then _, class = UnitClass("player") end
             color = class and RAID_CLASS_COLORS[class] or { r=1, g=1, b=1 }
         else
             color = db[prefix .. "BorderColor"] or { r=1, g=1, b=1 }
@@ -150,7 +152,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         if o then o:Fit() end
     end
 
-    local function _ttRound(tt, legacySize)
+    local function _ttRound(tt, legacySize, colorOverride)
         local db = EllesmereUIDB or {}
         local o = FFD[tt] and FFD[tt].round
         local on = db.tooltipRoundedCorners ~= false
@@ -158,7 +160,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         local size, color, alpha, w
         if on then
             local _
-            _, size, _, color, alpha = _resolveConfiguredBorder("tooltip", legacySize)
+            _, size, _, color, alpha = _resolveConfiguredBorder("tooltip", legacySize, colorOverride)
             -- The solid line's width in whole pixels, as the square border draws it.
             w = size > 0 and (EllesmereUI.BorderPx(db.tooltipBorderThicknessPx, size, "solid") or size) or 1
             w = math.max(1, math.floor(w + 0.5))
@@ -218,13 +220,14 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         GetFFD(tt).bg:Show()
         -- Border size/color (Blizz UI Enhanced > Blizzard Tooltip > Border), same reapply-every-call pattern; size 0 hides the border.
         local _, _, _, _, legacySize = EllesmereUI.GetTooltipBorder()
-        if _ttRound(tt, legacySize) then
+        local borderColor = _ttExtras.Border(tt)
+        if _ttRound(tt, legacySize, borderColor) then
             EllesmereUI._hideBlizzardConfiguredBorder(tt)
         else
             -- Back from the rounded path: shown first, so a size 0 apply still hides it.
             local cb = FFD[tt] and FFD[tt].configBorder
             if cb then cb:Show() end
-            _applyConfiguredBorder(tt, "tooltip", legacySize)
+            _applyConfiguredBorder(tt, "tooltip", legacySize, borderColor)
         end
         if _sbInset and tt == _GameTooltip then
             local x = _ttStripInset(tt)
@@ -282,12 +285,16 @@ local FFD, GetFFD = I.FFD, I.GetFFD
             local right = _G[name .. "TextRight" .. i]
             if right then SetFamily(right, fp, bodySize, ol, false) end
         end
+        _ttExtras.Fonts(tt)
     end
 
     local _ttRelaying = setmetatable({}, { __mode = "k" })
     local function _ttOnShow(self)
         _ttSkin(self)
         _ttFonts(self)
+        if self == ItemRefTooltip and _enabled() and _ttUsable(self) and ns.WSkin then
+            ns.WSkin.CloseButton(self.CloseButton or ItemRefCloseButton)
+        end
         -- Re-show to recalc size with the new fonts. Gated on the skin toggle (hook is
         -- uninstallable, must stay zero-cost when off). pcall'd: a tooltip rendering
         -- secret-capable content (e.g. SetSpellByID) denies a tainted re-Show as
@@ -462,8 +469,10 @@ local FFD, GetFFD = I.FFD, I.GetFFD
             and not ttd.ilvlShown
             and not _tipHasLine(_GameTooltip, EllesmereUI.L("Item Level")) then
             local nBefore = _GameTooltip:NumLines() or 0
-            _GameTooltip:AddDoubleLine(EllesmereUI.L("Item Level:"), cached.ilvl, 1, 1, 1, 1, 1, 1)
+            _GameTooltip:AddDoubleLine(EllesmereUI.L("Item Level:"), cached.ilvl, 1, 1, 1, _ttExtras.ItemLevel(cached.ilvl))
             _ttFonts(_GameTooltip, nBefore + 1)
+            local x = EllesmereUIDB and EllesmereUIDB.tooltipExtras
+            if x and x.specIcon and UnitTokenFromGUID then _ttExtras.Unit(_GameTooltip, UnitTokenFromGUID(guid)) end
             -- Runs for every source's result, also in combat; pcall'd like the re-Show in
             -- _ttOnShow, since a tainted re-Show can be denied as forbidden access.
             pcall(_GameTooltip.Show, _GameTooltip)
@@ -930,6 +939,334 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         end
     end
 
+    do
+        local function secret(v) return _isSecret and _isSecret(v) end
+        local function options() return EllesmereUIDB and EllesmereUIDB.tooltipExtras end
+        local function replace(text, word, value)
+            if not word or secret(word) or word == "" then return text end
+            if value ~= "" and text:find(value, 1, true) then return text end
+            local a, b = text:find(word, 1, true)
+            if not a then return text end
+            return text:sub(1, a - 1) .. value .. text:sub(b + 1)
+        end
+        local function paint(text, color)
+            return string.format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, text)
+        end
+        local function plain(text) return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) end
+        local function unitOf(tt)
+            if not tt.GetUnit then return end
+            local ok, _, unit = pcall(tt.GetUnit, tt)
+            if ok and not secret(unit) then return unit end
+        end
+        local function overlay(tt, key)
+            local d = GetFFD(tt)
+            if not d[key] then
+                local f = CreateFrame("Frame", nil, tt)
+                f:EnableMouse(false)
+                f.icon = f:CreateTexture(nil, "OVERLAY")
+                f.icon:SetAllPoints()
+                d[key] = f
+            end
+            return d[key]
+        end
+        local function hide(tt)
+            local d = FFD[tt]
+            if not d then return end
+            for _, key in ipairs({ "extraIcon", "factionIcon", "healthTextFrame" }) do
+                if d[key] then d[key]:Hide() end
+            end
+            d.extraLineRoles = nil
+        end
+        function _ttExtras.Hook(tt)
+            local d = GetFFD(tt)
+            if d.extraClearHook or not tt:HasScript("OnTooltipCleared") then return end
+            d.extraClearHook = true
+            tt:HookScript("OnTooltipCleared", hide)
+        end
+        function _ttExtras.ItemLevel(value)
+            local x = options()
+            if not x or not x.ilvlColor or secret(value) or type(value) ~= "number" then return 1, 1, 1 end
+            local green = x.ilvlGreen or 200
+            local blue = math.max(green, x.ilvlBlue or 240)
+            local purple = math.max(blue, x.ilvlPurple or 270)
+            local gold = math.max(purple, x.ilvlGold or 290)
+            if value >= gold then return 1, .5, 0 end
+            if value >= purple then return .64, .21, .93 end
+            if value >= blue then return 0, .44, .87 end
+            if value >= green then return .12, 1, 0 end
+            return .62, .62, .62
+        end
+        function _ttExtras.Border(tt)
+            local db = EllesmereUIDB
+            local x = options()
+            local mode = x and x.border
+            if not mode or mode == "none" then
+                if not db or db.tooltipBorderColorMode ~= "class" then return end
+                mode = "class"
+            end
+            if mode == "item" then
+                if not tt.GetTooltipData then return end
+                local ok, data = pcall(tt.GetTooltipData, tt)
+                if not ok or not data or secret(data.id) or not data.id then return end
+                if secret(data.type) or data.type ~= Enum.TooltipDataType.Item then return end
+                local getInfo = C_Item and C_Item.GetItemInfo
+                if not getInfo then return end
+                local quality = select(3, getInfo(data.id))
+                if quality and not secret(quality) then return ITEM_QUALITY_COLORS[quality] end
+                return
+            end
+            local unit = unitOf(tt)
+            if mode == "class" then
+                local class, ignored
+                if unit then
+                    ignored, class = UnitClass(unit)
+                elseif tt.GetTooltipData and GetPlayerInfoByGUID then
+                    local ok, data = pcall(tt.GetTooltipData, tt)
+                    if ok and data and not secret(data.type) and data.type == Enum.TooltipDataType.Unit
+                        and data.guid and not secret(data.guid) then
+                        ignored, class = GetPlayerInfoByGUID(data.guid)
+                    end
+                end
+                if class and not secret(class) then return _RAID_CC[class] end
+            elseif unit and mode == "reaction" then
+                local hostile = UnitCanAttack("player", unit)
+                if not secret(hostile) then return hostile and { r=1, g=.15, b=.15 } or { r=.15, g=1, b=.15 } end
+            elseif unit and mode == "faction" then
+                local faction = UnitFactionGroup(unit)
+                if not secret(faction) then
+                    if faction == "Alliance" then return PLAYER_FACTION_COLORS[1] end
+                    if faction == "Horde" then return PLAYER_FACTION_COLORS[0] end
+                end
+            end
+        end
+        function _ttExtras.Fonts(tt)
+            local x = options()
+            local roles = FFD[tt] and FFD[tt].extraLineRoles
+            if not x or not roles then return end
+            local fp, ol = _ttFontSpec()
+            local name = tt:GetName()
+            for index, role in pairs(roles) do
+                local size = role == "guild" and x.guildSizeOn and (x.guildSize or 12)
+                    or role == "status" and x.statusSizeOn and (x.statusSize or 12)
+                    or role == "realm" and x.hideRealm and 1
+                local fs = size and _G[name .. "TextLeft" .. index]
+                if fs then EllesmereUI.SetFontFamily(fs, fp, size, ol, false) end
+            end
+        end
+        function _ttExtras.Health()
+            local x = options()
+            local tt, bar = _GameTooltip, GameTooltipStatusBar
+            local d = FFD[tt]
+            if not x or not x.healthText or not _enabled() then
+                if d and d.healthTextFrame then d.healthTextFrame:Hide() end
+                return
+            end
+            if not bar or tt:IsForbidden() or not _ttUsable(tt) then return end
+            local unit = unitOf(tt)
+            if not unit then
+                if d and d.healthTextFrame then d.healthTextFrame:Hide() end
+                return
+            end
+            d = GetFFD(tt)
+            if not d.healthTextFrame then
+                local f = CreateFrame("Frame", nil, bar)
+                f:SetAllPoints(bar)
+                f.text = f:CreateFontString(nil, "OVERLAY")
+                f.text:SetPoint("LEFT", f, "LEFT", 2, 0)
+                f.text:SetPoint("RIGHT", f, "RIGHT", -2, 0)
+                d.healthTextFrame = f
+            end
+            local f = d.healthTextFrame
+            local fp, ol = _ttFontSpec()
+            EllesmereUI.SetFontFamily(f.text, fp, x.healthSize or 11, ol, false)
+            f.text:SetHeight((x.healthSize or 11) + 4)
+            f.text:SetJustifyH(x.healthPosition or "CENTER")
+            local current, maximum = UnitHealth(unit), UnitHealthMax(unit)
+            local format = x.healthFormat or "current"
+            local percent
+            if format == "percent" or format == "current-percent" then
+                if UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then
+                    percent = UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
+                elseif not secret(current) and not secret(maximum) then
+                    percent = maximum > 0 and current * 100 / maximum or 0
+                end
+            end
+            if format == "percent" then
+                if percent then f.text:SetFormattedText("%.0f%%", percent) else f.text:SetText("") end
+            elseif format == "current-percent" then
+                if percent then f.text:SetFormattedText("%.0f (%.0f%%)", current, percent) else f.text:SetText("") end
+            elseif format == "current-max" then
+                f.text:SetFormattedText("%.0f / %.0f", current, maximum)
+            else
+                f.text:SetFormattedText("%.0f", current)
+            end
+            f:Show()
+        end
+        local statusKeys = { "PVP_ENABLED", "PVP_DISABLED", "DEAD", "CORPSE", "PLAYER_OFFLINE", "AFK", "DND", "CHAT_FLAG_AFK", "CHAT_FLAG_DND" }
+        function _ttExtras.Unit(tt, unit, classFile, pname, realm)
+            local x = options()
+            if not x or not (x.classIcon or x.specIcon or x.guildSizeOn or x.statusSizeOn
+                or x.nameColorOn or x.titleColorOn or x.guildColorOn or x.guildRankColorOn
+                or x.statusColorOn or x.raceFaction or x.hideRealm or x.factionIcon) then return end
+            if not _ttUsable(tt) then return end
+            local name = tt:GetName()
+            if not name then return end
+            _ttExtras.Hook(tt)
+            local guild, rank, race, faction, className, specName, specIcon, ignored
+            className = classFile and LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[classFile]
+            if unit then
+                guild, rank = GetGuildInfo(unit)
+                race = UnitRace(unit)
+                faction = UnitFactionGroup(unit)
+                local cf
+                className, cf = UnitClass(unit)
+                if not secret(cf) then classFile = classFile or cf end
+                if not pname then pname, realm = UnitName(unit) end
+                if x.specIcon then
+                    local specID
+                    local api = C_SpecializationInfo
+                    local getSpec = api and api.GetSpecialization
+                    local getInfo = api and api.GetSpecializationInfo
+                    local getInspect = api and api.GetInspectSpecialization
+                    if UnitIsUnit(unit, "player") and getSpec and getInfo then
+                        local index = getSpec()
+                        if index then specID, specName, ignored, specIcon = getInfo(index) end
+                    elseif getInspect and GetSpecializationInfoByID then
+                        specID = getInspect(unit)
+                        if specID and not secret(specID) and specID > 0 then
+                            ignored, specName, ignored, specIcon = GetSpecializationInfoByID(specID)
+                        end
+                    end
+                end
+            end
+            if secret(guild) then guild = nil end
+            if secret(faction) then faction = nil end
+            local fc = faction == "Alliance" and PLAYER_FACTION_COLORS[1] or faction == "Horde" and PLAYER_FACTION_COLORS[0]
+            local roles, levelIdx = {}, nil
+            local size = x.unitIconSize or 14
+            local classIcon
+            local coords = classFile and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFile]
+            if x.classIcon and coords then
+                classIcon = string.format("|TInterface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES:%d:%d:0:0:256:256:%.0f:%.0f:%.0f:%.0f|t",
+                    size, size, coords[1] * 256, coords[2] * 256, coords[3] * 256, coords[4] * 256)
+            end
+            for i = 1, tt:NumLines() do
+                local fs = _G[name .. "TextLeft" .. i]
+                local text = fs and fs:GetText()
+                if text and not secret(text) then
+                    local clean = plain(text)
+                    local color
+                    if i == 1 then
+                        if x.hideRealm and realm and not secret(realm) and realm ~= "" then
+                            text = replace(text, "-" .. realm, "")
+                        end
+                        if x.nameColorOn or x.titleColorOn then
+                            text = plain(text)
+                            local a, b
+                            if pname and not secret(pname) then a, b = text:find(pname, 1, true) end
+                            local r, g, bColor = fs:GetTextColor()
+                            if secret(r) or secret(g) or secret(bColor) then r, g, bColor = 1, 1, 1 end
+                            local original = { r=r, g=g, b=bColor }
+                            local nc = x.nameColorOn and (x.nameColor or original) or original
+                            local tc = x.titleColorOn and (x.titleColor or original) or original
+                            text = a and (paint(text:sub(1, a - 1), tc) .. paint(text:sub(a, b), nc) .. paint(text:sub(b + 1), tc)) or paint(text, nc)
+                        end
+                    elseif guild and _isGuildText(clean:gsub("^<([^>]+)>", "%1"), guild) then
+                        roles[i] = "guild"
+                        if x.guildColorOn then color = x.guildColor or { r=1, g=1, b=1 } end
+                        if x.guildRankColorOn and rank and not secret(rank) then
+                            text = replace(text, "[" .. rank .. "]", "[" .. paint(rank, x.guildRankColor or { r=1, g=1, b=1 }) .. "]")
+                            text = replace(text, "(" .. rank .. ")", "(" .. paint(rank, x.guildRankColor or { r=1, g=1, b=1 }) .. ")")
+                        end
+                    elseif _isLevelText(clean) then
+                        levelIdx = i
+                        if x.raceFaction and fc and race and not secret(race) then text = replace(text, race, paint(race, fc)) end
+                    elseif realm and not secret(realm) and x.hideRealm and (clean == realm or clean == "(" .. realm .. ")") then
+                        text, roles[i] = "", "realm"
+                    else
+                        local status
+                        for _, key in ipairs(statusKeys) do if clean == _G[key] then status = true; break end end
+                        if status then
+                            roles[i] = "status"
+                            if x.statusColorOn then color = x.statusColor or { r=1, g=1, b=1 } end
+                        elseif not levelIdx and x.titleColorOn then color = x.titleColor or { r=1, g=1, b=1 } end
+                    end
+                    if levelIdx and (i == levelIdx or i == levelIdx + 1) then
+                        if classIcon then text = replace(text, className, classIcon) end
+                        if x.specIcon and specIcon and not secret(specIcon) then
+                            text = replace(text, specName, string.format("|T%s:%d:%d|t", specIcon, size, size))
+                        end
+                    end
+                    if text ~= fs:GetText() then fs:SetText(text) end
+                    if color then fs:SetTextColor(color.r, color.g, color.b) end
+                end
+            end
+            GetFFD(tt).extraLineRoles = roles
+            _ttExtras.Fonts(tt)
+            if x.factionIcon and fc then
+                local f = overlay(tt, "factionIcon")
+                f:SetSize(x.factionSize or 20, x.factionSize or 20)
+                f:ClearAllPoints()
+                local right = (x.factionPosition or "RIGHT") == "RIGHT"
+                f:SetPoint(right and "TOPLEFT" or "TOPRIGHT", tt, right and "TOPRIGHT" or "TOPLEFT", right and 4 or -4, -2)
+                f.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-" .. faction)
+                f:Show()
+                _ttExtras.Hook(tt)
+            end
+        end
+        function _ttExtras.Data(tt, data)
+            local x = options()
+            if not _enabled() or not x or not (x.icon or x.border and x.border ~= "none") then return end
+            if not tt or tt:IsForbidden() or not _ttUsable(tt) then return end
+            local f = FFD[tt] and FFD[tt].extraIcon
+            if f then f:Hide() end
+            if x.icon and data and not secret(data.type) and data.id and not secret(data.id) then
+                local icon
+                if data.type == Enum.TooltipDataType.Item then
+                    local getIcon = C_Item and C_Item.GetItemIconByID
+                    if getIcon then icon = getIcon(data.id) end
+                elseif data.type == Enum.TooltipDataType.Spell then
+                    local getIcon = C_Spell and C_Spell.GetSpellTexture
+                    if getIcon then icon = getIcon(data.id) end
+                elseif data.type == Enum.TooltipDataType.Achievement and GetAchievementInfo then
+                    icon = select(10, GetAchievementInfo(data.id))
+                end
+                if icon and not secret(icon) then
+                    f = overlay(tt, "extraIcon")
+                    f:SetSize(x.iconSize or 28, x.iconSize or 28)
+                    f:SetPoint("TOPRIGHT", tt, "TOPLEFT", -4, -2)
+                    f.icon:SetTexture(icon)
+                    f:Show()
+                    _ttExtras.Hook(tt)
+                end
+            end
+            _ttSkin(tt)
+        end
+        local dataHooks, healthHook, wasEnabled = {}, false, false
+        function _ttExtras.Init()
+            local x = options()
+            if not x and not wasEnabled then return end
+            for tt in pairs(_ttSkinned) do hide(tt) end
+            if not _enabled() or not x then return end
+            wasEnabled = true
+            if (x.icon or x.border and x.border ~= "none") and TooltipDataProcessor and Enum and Enum.TooltipDataType then
+                for _, key in ipairs({ "Item", "Spell", "Achievement" }) do
+                    local kind = Enum.TooltipDataType[key]
+                    if kind and not dataHooks[kind] then
+                        TooltipDataProcessor.AddTooltipPostCall(kind, _ttExtras.Data)
+                        dataHooks[kind] = true
+                    end
+                end
+            end
+            if x.healthText and GameTooltipStatusBar and not healthHook then
+                healthHook = true
+                GameTooltipStatusBar:HookScript("OnValueChanged", _ttExtras.Health)
+                _ttExtras.Hook(_GameTooltip)
+            end
+        end
+        EllesmereUI._applyTooltipExtras = _ttExtras.Init
+    end
+
     local function _ttUnitColor(tt, data)
         if tt ~= _GameTooltip or tt:IsForbidden() then return end
         local nLinesBefore = tt.NumLines and tt:NumLines() or 0
@@ -939,6 +1276,9 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         _tipShownGUID = guid
         local ttd = GetFFD(tt)
         ttd.ilvlShown = false
+        if EllesmereUIDB and (EllesmereUIDB.tooltipBorderColorMode == "class"
+            or EllesmereUIDB.tooltipExtras and EllesmereUIDB.tooltipExtras.border) then _ttSkin(tt) end
+        _ttExtras.Health()
         if not guid then return end
         -- Class and plain name from the authoritative GUID, with a live-token fallback. Non-players get no additions (GetPlayerInfoByGUID returns no class for non-player GUIDs, matching stock hover).
         local classFile, pname, prealm
@@ -954,6 +1294,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
                 _ttLineColors(tt, data, unit)
                 _ttTargetLine(tt, unit)
                 _ttFonts(tt, nLinesBefore)
+                _ttExtras.Unit(tt, unit)
                 return
             end
             local _, cf = UnitClass(unit)
@@ -1104,12 +1445,13 @@ local FFD, GetFFD = I.FFD, I.GetFFD
                 end
             end
             if ilvl and not _tipHasLine(tt, EllesmereUI.L("Item Level")) then
-                tt:AddDoubleLine(EllesmereUI.L("Item Level:"), ilvl, 1, 1, 1, 1, 1, 1)
+                tt:AddDoubleLine(EllesmereUI.L("Item Level:"), ilvl, 1, 1, 1, _ttExtras.ItemLevel(ilvl))
                 ttd.ilvlShown = true
             end
         end
         -- Re-apply our font to lines added after OnShow.
         _ttFonts(tt, nLinesBefore)
+        _ttExtras.Unit(tt, unit, classFile, pname, prealm)
     end
 
     -- Visual reskin: dark bg/border (via _ttHook -> _ttSkin), EUI fonts, and restyled status bar. Gated on "Reskin Tooltip" (customTooltips).
@@ -1186,7 +1528,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
     end
 
     -- Back-compat full init (data + visual), used by the live re-apply path.
-    local function _ttInit() _ttInitData(); _ttInitVisual() end
+    local function _ttInit() _ttInitData(); _ttInitVisual(); _ttExtras.Init() end
 
     -- Context menu skinning. Deliberately NOT memoised per frame: menu frames are
     -- pooled, so Blizzard hands the same frame back for the next menu and rebuilds
@@ -1568,6 +1910,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
             if _enabled() then
                 _ttInitData()
                 _ttInitVisual()
+                _ttExtras.Init()
             end
             if EllesmereUI.SyncAuraTooltipSkin then EllesmereUI.SyncAuraTooltipSkin() end
             if _pmEnabled() then
@@ -1665,7 +2008,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
         if on and db.tooltipItemLevel ~= false then
             local _, equipped = GetAverageItemLevel()
             if equipped and equipped > 0 then
-                tt:AddDoubleLine(L("Item Level:"), math.floor(equipped), 1, 1, 1, 1, 1, 1)
+                tt:AddDoubleLine(L("Item Level:"), math.floor(equipped), 1, 1, 1, _ttExtras.ItemLevel(equipped))
             end
         end
 
@@ -1677,6 +2020,7 @@ local FFD, GetFFD = I.FFD, I.GetFFD
             if data.configBorder then data.configBorder:Show() end
             _ttSkin(tt)
             _ttFonts(tt)
+            _ttExtras.Unit(tt, "player", classFile, name)
         else
             if tt.NineSlice then tt.NineSlice:SetAlpha(1) end
             if data.bg then data.bg:Hide() end

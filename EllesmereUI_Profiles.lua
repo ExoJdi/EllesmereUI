@@ -2191,6 +2191,7 @@ do
         "tooltipShowModifier", "tooltipGrowthDirection",
         "tooltipLevelColor", "tooltipClassLineColor", "tooltipFactionColor",
         "tooltipGuildmateColor", "tooltipCompactLevel", "tooltipAFKTag",
+        "tooltipExtras",
         "uberTooltips", "uberTooltipsManual", "tooltipHideHealthStrip",
         "tooltipHealthStripTexture", "tooltipHealthStripHeight",
         "tooltipAnchorCursor", "tooltipCursorPosition",

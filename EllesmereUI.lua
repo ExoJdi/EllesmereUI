@@ -4831,21 +4831,27 @@ initFrame:SetScript("OnEvent", function(self, event)
             if not IsSpellIDModifierHeld() then return end
             if not data or not data.id then return end
             if _isSecret and _isSecret(data.id) then return end
-            -- Aura IDs are rendered engine-side by the tooltipShowAuraSpellIDs CVar (see
-            -- SyncAuraSpellIDCVar), which also reaches the forbidden aura-container tooltips.
-            if Enum.TooltipDataType and data.type == Enum.TooltipDataType.UnitAura then return end
-            if not tooltip or not tooltip.GetName then return end
+            -- Secret aura IDs still use the engine CVar; readable aura IDs can use our lines.
+            if not tooltip or not tooltip.GetName or tooltip:IsForbidden() then return end
+            local usable, width = pcall(tooltip.GetWidth, tooltip)
+            if not usable or (_isSecret and _isSecret(width)) then return end
             local ok, name = pcall(tooltip.GetName, tooltip)
             if not ok or not name then return end
-            if hasDupLine(tooltip, name, "SpellID") then return end
-            tooltip:AddDoubleLine("SpellID", tostring(data.id), 1, 1, 1, 1, 1, 1)
-            if EllesmereUIDB.showIconID ~= false then
+            local added
+            local aura = Enum.TooltipDataType and data.type == Enum.TooltipDataType.UnitAura
+            if not hasDupLine(tooltip, name, "SpellID")
+                and not (aura and hasDupLine(tooltip, name, "Spell ID")) then
+                tooltip:AddDoubleLine("SpellID", tostring(data.id), 1, 1, 1, 1, 1, 1)
+                added = true
+            end
+            if EllesmereUIDB.showIconID ~= false and not hasDupLine(tooltip, name, "IconID") then
                 local iconID = C_Spell.GetSpellTexture(data.id)
-                if iconID then
+                if iconID and not (_isSecret and _isSecret(iconID)) then
                     tooltip:AddDoubleLine("IconID", tostring(iconID), 1, 1, 1, 1, 1, 1)
+                    added = true
                 end
             end
-            tooltip:Show()
+            if added then pcall(tooltip.Show, tooltip) end
         end
 
         local function ItemIDTooltipHook(tooltip, data)

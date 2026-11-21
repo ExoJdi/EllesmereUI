@@ -979,6 +979,85 @@ initFrame:SetScript("OnEvent", function(self)
             BorderOffsetRow("tooltip",ttReskinOff,TooltipBorderApply)
         end
 
+        do
+            local function get(key, fallback)
+                local x = EllesmereUIDB and EllesmereUIDB.tooltipExtras
+                local value = x and x[key]
+                if value == nil then return fallback end
+                return value
+            end
+            local function put(key, value)
+                EllesmereUIDB.tooltipExtras = EllesmereUIDB.tooltipExtras or {}
+                EllesmereUIDB.tooltipExtras[key] = value
+                if EllesmereUI._applyTooltipExtras then EllesmereUI._applyTooltipExtras() end
+            end
+            local function toggle(key, label, tooltip)
+                return { type="toggle", text=label, tooltip=tooltip, disabled=ttReskinOff,
+                    getValue=function() return get(key, false) end,
+                    setValue=function(v) put(key, v); EllesmereUI:RefreshPage() end }
+            end
+            local function slider(key, label, default, min, max)
+                return { type="slider", label=label, min=min, max=max, step=1,
+                    get=function() return get(key, default) end, set=function(v) put(key, v) end }
+            end
+            local function cog(region, enabled, title, rows)
+                EllesmereUI.BuildInlineCog(region, { title=title, rows=rows,
+                    disabled=function() return ttReskinOff() or not get(enabled, false) end,
+                    disabledTooltip=title })
+            end
+            local function row(left, right)
+                local frame, height = W:DualRow(parent, y, left, right)
+                y = y - height
+                return frame
+            end
+            _, h = W:SectionHeader(parent, "TOOLTIP LINE STYLING", y); y = y - h
+            local r = row(toggle("ilvlColor", "Item Level Tier Colors", "Colors item level using editable thresholds. Keep thresholds in ascending order."),
+                { type="dropdown", text="Context Border Color", disabled=ttReskinOff,
+                  values={ none="Off", item="Item Rarity", reaction="Hostile / Friendly", faction="Faction", class="Hovered Class" },
+                  order={ "none", "item", "reaction", "faction", "class" },
+                  getValue=function() return get("border", "none") end, setValue=function(v) put("border", v) end })
+            cog(r._leftRegion, "ilvlColor", "Item Level Tier Colors", {
+                slider("ilvlGreen", "Green Minimum", 200, 1, 1000), slider("ilvlBlue", "Blue Minimum", 240, 1, 1000),
+                slider("ilvlPurple", "Purple Minimum", 270, 1, 1000), slider("ilvlGold", "Orange Minimum", 290, 1, 1000) })
+            r = row(toggle("classIcon", "Class Word as Icon"),
+                toggle("specIcon", "Specialization Word as Icon", "Replaces an existing specialization name when readable specialization data is available. Does not request additional inspections."))
+            cog(r._leftRegion, "classIcon", "Class Icon Size", { slider("unitIconSize", "Icon Size", 14, 8, 32) })
+            cog(r._rightRegion, "specIcon", "Specialization Icon Size", { slider("unitIconSize", "Icon Size", 14, 8, 32) })
+            r = row(toggle("icon", "Item / Spell / Achievement Icon"), toggle("factionIcon", "Faction Icon"))
+            cog(r._leftRegion, "icon", "Tooltip Icon", { slider("iconSize", "Icon Size", 28, 12, 64) })
+            cog(r._rightRegion, "factionIcon", "Faction Icon", {
+                { type="dropdown", label="Position", values={ LEFT="Left", RIGHT="Right" }, order={ "LEFT", "RIGHT" },
+                  get=function() return get("factionPosition", "RIGHT") end, set=function(v) put("factionPosition", v) end },
+                slider("factionSize", "Icon Size", 20, 10, 48) })
+            row(toggle("hideRealm", "Hide Realm"), toggle("raceFaction", "Race Colored by Faction"))
+            r = row(toggle("healthText", "Health Bar Text", "Uses the tooltip health strip. Enable Show Health Strip to see its text. Secret health values are passed directly to the font string."),
+                toggle("guildSizeOn", "Guild Line Font Size"))
+            cog(r._leftRegion, "healthText", "Health Bar Text", {
+                { type="dropdown", label="Position", values={ LEFT="Left", CENTER="Center", RIGHT="Right" }, order={ "LEFT", "CENTER", "RIGHT" },
+                  get=function() return get("healthPosition", "CENTER") end, set=function(v) put("healthPosition", v) end },
+                { type="dropdown", label="Format", values={ current="Current", ["current-max"]="Current / Max", percent="Percent", ["current-percent"]="Current (Percent)" },
+                  order={ "current", "current-max", "percent", "current-percent" },
+                  get=function() return get("healthFormat", "current") end, set=function(v) put("healthFormat", v) end },
+                slider("healthSize", "Font Size", 11, 6, 24) })
+            cog(r._rightRegion, "guildSizeOn", "Guild Line Font Size", { slider("guildSize", "Font Size", 12, 6, 24) })
+            local function colorCfg(key, label)
+                return { type="colorpicker", label=label,
+                    get=function() local c=get(key, {r=1,g=1,b=1}); return c.r,c.g,c.b end,
+                    set=function(r,g,b) put(key, {r=r,g=g,b=b}) end }
+            end
+            local colors = { { "name", "Name Color" }, { "title", "Title Color" }, { "guild", "Guild Color" },
+                { "guildRank", "Guild Rank Color" }, { "status", "Status Color" } }
+            r = row(toggle("statusSizeOn", "Status Line Font Size"), toggle("nameColorOn", "Name Color"))
+            cog(r._leftRegion, "statusSizeOn", "Status Line Font Size", { slider("statusSize", "Font Size", 12, 6, 24) })
+            cog(r._rightRegion, "nameColorOn", "Name Color", { colorCfg("nameColor", "Color") })
+            for i = 2, #colors, 2 do
+                local a, b = colors[i], colors[i + 1]
+                local frame = row(toggle(a[1] .. "ColorOn", a[2]), b and toggle(b[1] .. "ColorOn", b[2]) or EllesmereUI.BlankRowCfg())
+                cog(frame._leftRegion, a[1] .. "ColorOn", a[2], { colorCfg(a[1] .. "Color", "Color") })
+                if b then cog(frame._rightRegion, b[1] .. "ColorOn", b[2], { colorCfg(b[1] .. "Color", "Color") }) end
+            end
+        end
+
         -----------------------------------------------------------------------
         --  Blizzard Bars, Popups & Buttons: on-screen elements that are not
         --  windows, so they get plain toggles here rather than cards on the
@@ -4949,6 +5028,8 @@ initFrame:SetScript("OnEvent", function(self)
                 EllesmereUIDB.tooltipGuildmateColor = nil
                 EllesmereUIDB.tooltipCompactLevel = nil
                 EllesmereUIDB.tooltipAFKTag = nil
+                EllesmereUIDB.tooltipExtras = nil
+                if EllesmereUI._applyTooltipExtras then EllesmereUI._applyTooltipExtras() end
                 -- Tooltip Extras' Item Counts: the Bags module's account-wide switch.
                 -- Cleared here with its row, but never exported with the tooltip
                 -- settings: turning it on makes Bags save inventories, which a
